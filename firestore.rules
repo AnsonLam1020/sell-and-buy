@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: items
+    // Fields:
+    //   - name: string (required, 1-100 chars)
+    //   - category: string (required, enum)
+    //   - price: number (required, positive)
+    //   - status: string (required, enum)
+    //   - userId: string (required, matches auth.uid)
+    //   - createdAt: timestamp (required)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' || 
+         (request.auth.token.email == "lamanson1020@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidItem(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 100 &&
+             data.price is number && data.price >= 0 &&
+             data.status in ['active', 'done'] &&
+             data.userId is string &&
+             data.createdAt is timestamp;
+    }
+
+    match /items/{itemId} {
+      allow read, create, update, delete: if true;
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

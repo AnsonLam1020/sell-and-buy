@@ -1,0 +1,6 @@
+{
+  "name": "培正回收箱",
+  "description": "一個簡潔高效的回收轉賣系統，支持物品發佈、分類篩選與數據持久化。",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

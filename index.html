@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>培正回收箱</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="bg-blue-600 p-2 rounded-lg text-white">
+                    <i data-lucide="package" class="w-6 h-6"></i>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight text-slate-800">培正回收箱</h1>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+        
+        <!-- Status Filter Tabs -->
+        <div id="statusTabs" class="flex gap-2 mb-6 bg-slate-100 p-1 rounded-2xl w-fit">
+            <button onclick="setStatusFilter('all')" class="status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all bg-white text-blue-600 shadow-sm" data-status="all">全部</button>
+            <button onclick="setStatusFilter('active')" class="status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-slate-500 hover:text-slate-700" data-status="active">只看未賣出</button>
+            <button onclick="setStatusFilter('done')" class="status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-slate-500 hover:text-slate-700" data-status="done">只看已賣出</button>
+            <button onclick="setStatusFilter('interested')" class="status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-slate-500 hover:text-slate-700" data-status="interested">只看有興趣</button>
+        </div>
+
+        <!-- Filter Bar -->
+        <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-8">
+            <div class="flex flex-wrap gap-4">
+                <!-- Search -->
+                <div class="relative w-full md:flex-[2] min-w-[200px]">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                    <input type="text" id="searchInput" oninput="renderList()" placeholder="搜索物品..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
+                </div>
+                
+                <!-- Main Category -->
+                <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
+                    <i data-lucide="filter" class="text-slate-400 w-4 h-4"></i>
+                    <select id="mainCategorySelect" onchange="updateSubCategories(); renderList();" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
+                        <option value="全部">所有大類別</option>
+                    </select>
+                </div>
+
+                <!-- Sub Category -->
+                <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
+                    <i data-lucide="filter" class="text-slate-400 w-4 h-4"></i>
+                    <select id="subCategorySelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none disabled:opacity-50" disabled>
+                        <option value="全部">所有細類別</option>
+                    </select>
+                </div>
+
+                <!-- Price Range -->
+                <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[120px]">
+                    <i data-lucide="dollar-sign" class="text-slate-400 w-4 h-4"></i>
+                    <select id="priceRangeSelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
+                        <option value="all">全部價錢</option>
+                        <option value="0-200">$0 - $200</option>
+                        <option value="201-400">$201 - $400</option>
+                        <option value="401-600">$401 - $600</option>
+                        <option value="601-800">$601 - $800</option>
+                        <option value="801-1000">$801 - $1000</option>
+                        <option value="1001-up">> $1000</option>
+                    </select>
+                </div>
+
+                <!-- Sort Toggle -->
+                <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[160px]">
+                    <button onclick="toggleSort()" class="flex-1 flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 hover:bg-slate-100 transition-all text-sm group">
+                        <div class="flex items-center gap-2 text-slate-400 group-hover:text-blue-600 truncate">
+                            <i data-lucide="refresh-cw" id="sortIcon" class="w-4 h-4 shrink-0 transition-transform duration-500"></i>
+                            <span id="sortLabel" class="text-slate-600 font-medium truncate">價格：由低至高</span>
+                        </div>
+                        <div class="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shrink-0 ml-1">切換</div>
+                    </button>
+                </div>
+
+                <button onclick="openModal()" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 active:scale-95">
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                    <span>發佈物件</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Helper Note -->
+        <div class="mb-8 flex items-center gap-2 px-4 py-3 bg-red-50/30 border border-red-100/50 rounded-2xl">
+            <span class="text-red-600 font-black text-xl leading-none">！</span>
+            <p class="text-slate-600 text-sm font-bold">有沒有興趣只會出現在尚未賣出的貨品</p>
+        </div>
+
+        <!-- Item Grid -->
+        <div id="itemGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Items injected by JS -->
+        </div>
+
+        <div id="emptyState" class="hidden text-center py-20">
+            <div class="bg-slate-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="package" class="w-10 h-10 text-slate-300"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800">沒有找到物件</h3>
+            <p class="text-slate-500">嘗試更改篩選條件或發佈新物件</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto bg-white border-t border-slate-200 py-6 shadow-[0_-1px_3px_0_rgba(0,0,0,0.05)]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-[10px] text-slate-300 font-medium">
+            © <span id="year"></span> 培正回收箱 · 綠色校園 資源共享
+        </div>
+    </footer>
+
+    <!-- Add Item Modal -->
+    <div id="addItemModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div onclick="closeModal()" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+        <div class="relative bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
+            <h2 class="text-2xl font-black text-slate-800 mb-6">發布回收物件</h2>
+            <form onsubmit="handleFormSubmit(event)" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">物件名稱</label>
+                    <input type="text" id="itemName" required placeholder="例如：二手筆記本" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">大類別</label>
+                        <select id="modalMainCategory" onchange="updateModalSubCategories()" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none"></select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">細類別</label>
+                        <select id="modalSubCategory" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none"></select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">價錢 (HKD)</label>
+                    <input type="number" id="itemPrice" required placeholder="0" min="0" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeModal()" class="flex-1 px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-all">取消</button>
+                    <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">發佈物件</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Constants & Config
+        const CATEGORY_TREE = {
+            "電子產品": ["電話", "平板電腦", "手提電腦", "電子配件"],
+            "書籍": ["中文書籍", "英文書籍", "數學書籍", "其他書籍"],
+            "衣物": ["男裝", "女裝", "童裝"],
+            "家居用品": ["廚具", "家具", "裝飾品"],
+            "其他": ["其他"]
+        };
+
+        const CATEGORY_ICONS = {
+            "電話": "smartphone", "平板電腦": "tablet", "手提電腦": "laptop", "電子配件": "cpu",
+            "中文書籍": "book-text", "英文書籍": "book-open", "數學書籍": "calculator", "其他書籍": "book",
+            "男裝": "shirt", "女裝": "shirt", "童裝": "baby",
+            "廚具": "utensils", "家具": "sofa", "裝飾品": "flower", "其他": "more-horizontal"
+        };
+
+        let currentStatusFilter = 'all';
+        let currentSortBy = 'price-asc';
+
+        // 6. JS must have 3 separate functions: saveData, loadData, renderList
+
+        function loadData() {
+            const data = localStorage.getItem('records');
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveData(newRecord) {
+            const records = loadData();
+            records.unshift(newRecord);
+            localStorage.setItem('records', JSON.stringify(records));
+        }
+
+        function updateRecord(id, updates) {
+            const records = loadData();
+            const index = records.findIndex(r => r.id === id);
+            if (index !== -1) {
+                records[index] = { ...records[index], ...updates };
+                localStorage.setItem('records', JSON.stringify(records));
+                renderList();
+            }
+        }
+
+        function deleteRecord(id) {
+            const records = loadData().filter(r => r.id !== id);
+            localStorage.setItem('records', JSON.stringify(records));
+            renderList();
+        }
+
+        function renderList() {
+            const records = loadData();
+            const grid = document.getElementById('itemGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const mainCat = document.getElementById('mainCategorySelect').value;
+            const subCat = document.getElementById('subCategorySelect').value;
+            const priceRange = document.getElementById('priceRangeSelect').value;
+
+            const filtered = records.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchQuery);
+                
+                let matchesCategory = true;
+                if (mainCat !== '全部') {
+                    const allowedSubs = CATEGORY_TREE[mainCat] || [];
+                    if (subCat !== '全部') {
+                        matchesCategory = item.category === subCat;
+                    } else {
+                        matchesCategory = allowedSubs.includes(item.category);
+                    }
+                }
+
+                let matchesStatus = true;
+                if (currentStatusFilter === 'active') matchesStatus = item.status === 'active';
+                else if (currentStatusFilter === 'done') matchesStatus = item.status === 'done';
+                else if (currentStatusFilter === 'interested') matchesStatus = item.isInterested && item.status !== 'done';
+
+                let matchesPrice = true;
+                if (priceRange !== 'all') {
+                    const price = item.price;
+                    if (priceRange === '1001-up') matchesPrice = price > 1000;
+                    else {
+                        const [min, max] = priceRange.split('-').map(Number);
+                        matchesPrice = price >= min && price <= max;
+                    }
+                }
+
+                return matchesSearch && matchesCategory && matchesStatus && matchesPrice;
+            });
+
+            // Sort
+            filtered.sort((a, b) => {
+                const statusOrder = (i) => (i.status === 'done' ? 1 : 0);
+                if (statusOrder(a) !== statusOrder(b)) return statusOrder(a) - statusOrder(b);
+                
+                if (currentSortBy === 'price-asc') return a.price - b.price;
+                return b.price - a.price;
+            });
+
+            grid.innerHTML = '';
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                filtered.forEach(item => {
+                    const isSold = item.status === 'done';
+                    const isInterested = item.isInterested && !isSold;
+                    
+                    const card = document.createElement('div');
+                    card.className = `rounded-2xl p-5 border shadow-sm hover:shadow-md transition-all group ${
+                        isInterested 
+                        ? 'ring-2 ring-red-500 border-red-500 bg-red-50/10' 
+                        : isSold ? 'bg-green-50/80 border-green-100 opacity-90' : 'bg-white border-slate-100'
+                    }`;
+
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="bg-slate-50 p-3 rounded-xl group-hover:bg-blue-50 transition-colors">
+                                <i data-lucide="${CATEGORY_ICONS[item.category] || 'package'}" class="w-6 h-6 text-slate-400"></i>
+                            </div>
+                            <div class="flex flex-col items-end gap-2 text-right">
+                                <div class="flex items-center gap-2">
+                                    ${!isSold ? `
+                                        <button onclick="toggleInterested('${item.id}')" class="p-1.5 rounded-full transition-all ${item.isInterested ? 'text-red-500 bg-red-50' : 'text-slate-300 hover:text-red-400 hover:bg-slate-50'}">
+                                            <i data-lucide="heart" class="w-4 h-4 ${item.isInterested ? 'fill-current' : ''}"></i>
+                                        </button>
+                                    ` : ''}
+                                    <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold uppercase tracking-wider">
+                                        ${item.category}
+                                    </span>
+                                </div>
+                                ${isSold ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-black">[已賣出]</span>' : ''}
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800 mb-1 truncate">${item.name}</h3>
+                        <div class="flex items-baseline gap-1 mb-4">
+                            <span class="text-2xl font-black text-blue-600">$${item.price}</span>
+                        </div>
+                        <div class="pt-4 border-t border-slate-50 flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-slate-400 text-xs">
+                                <i data-lucide="tag" class="w-3 h-3"></i>
+                                <span>${new Date(item.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="toggleStatus('${item.id}')" class="text-xs font-bold px-2 py-1 rounded transition-colors ${isSold ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                                    ${isSold ? '恢復上架' : '尚未賣出'}
+                                </button>
+                                <button onclick="deleteRecord('${item.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+            lucide.createIcons();
+        }
+
+        // Action functions
+        function toggleInterested(id) {
+            const records = loadData();
+            const item = records.find(r => r.id === id);
+            if (item) updateRecord(id, { isInterested: !item.isInterested });
+        }
+
+        function toggleStatus(id) {
+            const records = loadData();
+            const item = records.find(r => r.id === id);
+            if (item) updateRecord(id, { status: item.status === 'active' ? 'done' : 'active' });
+        }
+
+        function setStatusFilter(status) {
+            currentStatusFilter = status;
+            document.querySelectorAll('.status-btn').forEach(btn => {
+                if (btn.getAttribute('data-status') === status) {
+                    if (status === 'interested') {
+                        btn.className = 'status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all bg-red-500 text-white shadow-sm';
+                    } else {
+                        btn.className = 'status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all bg-white text-blue-600 shadow-sm';
+                    }
+                } else {
+                    btn.className = 'status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-slate-500 hover:text-slate-700';
+                }
+            });
+            renderList();
+        }
+
+        function toggleSort() {
+            currentSortBy = currentSortBy === 'price-asc' ? 'price-desc' : 'price-asc';
+            document.getElementById('sortLabel').innerText = currentSortBy === 'price-asc' ? '價格：由低至高' : '價格：由高至低';
+            document.getElementById('sortIcon').style.transform = currentSortBy === 'price-desc' ? 'rotate(180deg)' : 'rotate(0deg)';
+            renderList();
+        }
+
+        // Category UI Helpers
+        function initCategorySelects() {
+            const mainSelect = document.getElementById('mainCategorySelect');
+            const modalMainSelect = document.getElementById('modalMainCategory');
+            
+            Object.keys(CATEGORY_TREE).forEach(main => {
+                const opt = document.createElement('option');
+                opt.value = main;
+                opt.innerText = main;
+                mainSelect.appendChild(opt);
+                
+                const optModal = document.createElement('option');
+                optModal.value = main;
+                optModal.innerText = main;
+                modalMainSelect.appendChild(optModal);
+            });
+            updateModalSubCategories();
+        }
+
+        function updateSubCategories() {
+            const main = document.getElementById('mainCategorySelect').value;
+            const subSelect = document.getElementById('subCategorySelect');
+            subSelect.innerHTML = '<option value="全部">所有細類別</option>';
+            
+            if (main === '全部') {
+                subSelect.disabled = true;
+            } else {
+                subSelect.disabled = false;
+                CATEGORY_TREE[main].forEach(sub => {
+                    const opt = document.createElement('option');
+                    opt.value = sub;
+                    opt.innerText = sub;
+                    subSelect.appendChild(opt);
+                });
+            }
+        }
+
+        function updateModalSubCategories() {
+            const main = document.getElementById('modalMainCategory').value;
+            const subSelect = document.getElementById('modalSubCategory');
+            subSelect.innerHTML = '';
+            CATEGORY_TREE[main].forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub;
+                opt.innerText = sub;
+                subSelect.appendChild(opt);
+            });
+        }
+
+        // Modal Logic
+        function openModal() {
+            document.getElementById('addItemModal').classList.remove('hidden');
+        }
+        function closeModal() {
+            document.getElementById('addItemModal').classList.add('hidden');
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('itemName').value;
+            const category = document.getElementById('modalSubCategory').value;
+            const price = parseFloat(document.getElementById('itemPrice').value);
+
+            const newRecord = {
+                id: Date.now() + "_" + Math.random().toString(36).slice(2,6),
+                createdAt: new Date().toISOString(),
+                name,
+                category,
+                price,
+                status: "active",
+                isInterested: false
+            };
+
+            saveData(newRecord);
+            renderList();
+            closeModal();
+            e.target.reset();
+        }
+
+        // Initialize
+        window.onload = () => {
+            document.getElementById('year').innerText = new Date().getFullYear();
+            initCategorySelects();
+            renderList();
+        };
+    </script>
+</body>
+</html>

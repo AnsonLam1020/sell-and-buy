@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "Item": {
+      "title": "Item",
+      "description": "A recycled item for sale",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the item"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the item (could be custom if 'Other' was selected)"
+        },
+        "price": {
+          "type": "number",
+          "description": "Selling price"
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the item",
+          "enum": ["active", "done"]
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the seller"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["name", "category", "price", "userId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/items/{itemId}": {
+      "schema": "Item",
+      "description": "Collection of items for sale"
+    }
+  }
+}
