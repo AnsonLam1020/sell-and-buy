@@ -116,7 +116,7 @@
     <!-- Footer -->
     <footer class="mt-auto bg-white border-t border-slate-200 py-6 shadow-[0_-1px_3px_0_rgba(0,0,0,0.05)]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-[10px] text-slate-300 font-medium">
-            © <span id="year"></span> 培正回收箱 · 綠色校園 資源共享
+            &copy; <span id="year"></span> 培正回收箱 · 綠色校園 資源共享
         </div>
     </footer>
 
@@ -156,8 +156,12 @@
     </div>
 
     <script>
+        // ============================================
+        // 培正回收箱 - Frontend JavaScript
+        // ============================================
+        
         // Constants & Config
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyM9w8aLBPhtVctTShm0Ox7DfkZgYme0LqusL_owI2WL5Q_Kc-g_puaDAGPtMbmIF2YBw/exec";
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwsjr7gYkShP2ju3d4hIVASMUHn_OYOqF5ecXqv7pjncJC0YbHK6Fmk4SXMDS3kXPYTcg/exec";
 
         const CATEGORY_TREE = {
             "電子產品": ["電話", "平板電腦", "手提電腦", "電子配件"],
@@ -177,19 +181,32 @@
         let currentStatusFilter = 'all';
         let currentSortBy = 'price-asc';
 
-        // Apps Script Sync Helper
+        // ============================================
+        // Google Apps Script Sync Helper
+        // ============================================
         async function syncToSheet(payload) {
-            if (APPS_SCRIPT_URL.includes("PASTE")) return;
+            // 如果還是 placeholder，不要送出
+            if (APPS_SCRIPT_URL.includes("PASTE")) {
+                console.warn("⚠️ 尚未設定 APPS_SCRIPT_URL，跳過同步");
+                return;
+            }
+            
             try {
-                await fetch(APPS_SCRIPT_URL, {
+                const response = await fetch(APPS_SCRIPT_URL, {
                     method: "POST",
                     headers: { "Content-Type": "text/plain" },
                     body: JSON.stringify(payload)
                 });
-            } catch (e) { console.warn(e); }
+                const result = await response.json();
+                console.log("✅ 同步成功:", result);
+            } catch (e) {
+                console.warn("⚠️ 同步到 Google Sheet 失敗，但 localStorage 已儲存:", e);
+            }
         }
 
-        // 6. JS must have 3 separate functions: saveData, loadData, renderList
+        // ============================================
+        // LocalStorage CRUD Functions
+        // ============================================
 
         function loadData() {
             const data = localStorage.getItem('records');
@@ -200,6 +217,7 @@
             const records = loadData();
             records.unshift(newRecord);
             localStorage.setItem('records', JSON.stringify(records));
+            // 同步到 Google Sheet
             syncToSheet({ action: "create", record: newRecord });
         }
 
@@ -209,6 +227,7 @@
             if (index !== -1) {
                 records[index] = { ...records[index], ...updates };
                 localStorage.setItem('records', JSON.stringify(records));
+                // 同步到 Google Sheet
                 syncToSheet({ action: "update", id: id, changes: updates });
                 renderList();
             }
@@ -217,6 +236,8 @@
         function deleteRecord(id) {
             const records = loadData().filter(r => r.id !== id);
             localStorage.setItem('records', JSON.stringify(records));
+            // 同步到 Google Sheet
+            syncToSheet({ action: "delete", id: id });
             renderList();
         }
 
@@ -330,7 +351,10 @@
             lucide.createIcons();
         }
 
-        // Action functions
+        // ============================================
+        // Action functions (UI interactions)
+        // ============================================
+
         function toggleInterested(id) {
             const records = loadData();
             const item = records.find(r => r.id === id);
@@ -366,7 +390,10 @@
             renderList();
         }
 
+        // ============================================
         // Category UI Helpers
+        // ============================================
+
         function initCategorySelects() {
             const mainSelect = document.getElementById('mainCategorySelect');
             const modalMainSelect = document.getElementById('modalMainCategory');
@@ -415,7 +442,10 @@
             });
         }
 
+        // ============================================
         // Modal Logic
+        // ============================================
+        
         function openModal() {
             document.getElementById('addItemModal').classList.remove('hidden');
         }
@@ -445,7 +475,10 @@
             e.target.reset();
         }
 
+        // ============================================
         // Initialize
+        // ============================================
+        
         window.onload = () => {
             document.getElementById('year').innerText = new Date().getFullYear();
             initCategorySelects();
