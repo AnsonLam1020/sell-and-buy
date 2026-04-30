@@ -157,6 +157,8 @@
 
     <script>
         // Constants & Config
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyM9w8aLBPhtVctTShm0Ox7DfkZgYme0LqusL_owI2WL5Q_Kc-g_puaDAGPtMbmIF2YBw/exec";
+
         const CATEGORY_TREE = {
             "電子產品": ["電話", "平板電腦", "手提電腦", "電子配件"],
             "書籍": ["中文書籍", "英文書籍", "數學書籍", "其他書籍"],
@@ -175,6 +177,18 @@
         let currentStatusFilter = 'all';
         let currentSortBy = 'price-asc';
 
+        // Apps Script Sync Helper
+        async function syncToSheet(payload) {
+            if (APPS_SCRIPT_URL.includes("PASTE")) return;
+            try {
+                await fetch(APPS_SCRIPT_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify(payload)
+                });
+            } catch (e) { console.warn(e); }
+        }
+
         // 6. JS must have 3 separate functions: saveData, loadData, renderList
 
         function loadData() {
@@ -186,6 +200,7 @@
             const records = loadData();
             records.unshift(newRecord);
             localStorage.setItem('records', JSON.stringify(records));
+            syncToSheet({ action: "create", record: newRecord });
         }
 
         function updateRecord(id, updates) {
@@ -194,6 +209,7 @@
             if (index !== -1) {
                 records[index] = { ...records[index], ...updates };
                 localStorage.setItem('records', JSON.stringify(records));
+                syncToSheet({ action: "update", id: id, changes: updates });
                 renderList();
             }
         }
