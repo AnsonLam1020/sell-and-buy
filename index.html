@@ -186,7 +186,7 @@
 
     <script>
         // ============================================
-        // 培正回收箱 - Frontend JavaScript（喜歡切換 + 全新度）
+        // 培正回收箱 - Frontend JavaScript（喜歡切換 + 全新度修復）
         // ============================================
         
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAolZlRu_FkosrdUAr3q3450xey6g8tYcIrOt5dbcwbZbL-97006olyuj6qm2x3jD2Sg/exec";
@@ -209,17 +209,18 @@
         let currentStatusFilter = 'all';
         let currentSortBy = 'price-asc';
 
-        // 1. 欄位標準化 (新增 condition)
+        // 1. 欄位標準化 (全新度嚴格檢查)
         function normalizeRecord(record) {
             return {
                 id: String(record.id || record.ID || ""),
                 createdAt: record.createdAt || record.CreatedAt || "",
                 content: String(record.content || record.Content || ""),
                 category: String(record.category || record.Category || "其他"),
-                price: Number(record.price !== undefined ? record.price : (record.Price || 0)),
-                likes: Number(record.likes !== undefined ? record.likes : (record.Likes || 0)),
+                price: Number(record.price !== undefined ? record.price : (record.Price != null ? record.Price : 0)),
+                likes: Number(record.likes !== undefined ? record.likes : (record.Likes != null ? record.Likes : 0)),
                 status: String(record.status || record.Status || "active"),
-                condition: Number(record.condition !== undefined ? record.condition : (record.Condition || 100))
+                // 僅在 Condition 為 null/undefined 時預設 100，保留 0
+                condition: record.condition !== undefined ? Number(record.condition) : (record.Condition != null ? Number(record.Condition) : 100)
             };
         }
 
@@ -359,7 +360,7 @@
                 // 全新度篩選
                 let matchesCondition = true;
                 if (conditionRange !== 'all') {
-                    const cond = item.condition || 100;
+                    const cond = item.condition != null ? item.condition : 100;
                     const [min, max] = conditionRange.split('-').map(Number);
                     matchesCondition = cond >= min && cond <= max;
                 }
@@ -384,7 +385,7 @@
                     const isSold = item.status === 'done';
                     const isLiked = item.likes > 0 && !isSold;
                     const displayPrice = item.price || 0;
-                    const displayCondition = item.condition !== undefined ? item.condition : 100;
+                    const displayCondition = item.condition != null ? item.condition : 100;
                     
                     const card = document.createElement('div');
                     card.className = `rounded-2xl p-5 border shadow-sm hover:shadow-md transition-all group ${
@@ -416,7 +417,6 @@
                         <div class="flex items-baseline gap-1 mb-1">
                             <span class="text-2xl font-black text-blue-600">$${displayPrice}</span>
                         </div>
-                        <!-- 全新度顯示 -->
                         <div class="flex items-center gap-1 text-sm text-slate-500 mb-4">
                             <i data-lucide="star" class="w-3 h-3"></i>
                             <span>全新度：${displayCondition}%</span>
@@ -442,7 +442,7 @@
             lucide.createIcons();
         }
 
-        // 7. 互動功能 (改為切換喜歡)
+        // 7. 互動功能 (喜歡切換)
         async function handleLike(id) {
             const records = await loadData();
             const index = records.findIndex(r => r.id === id);
@@ -558,7 +558,6 @@
             await saveData(newRecord);
             closeModal();
             e.target.reset();
-            // 重置全新度預設值
             document.getElementById('itemCondition').value = 100;
         }
 
@@ -585,7 +584,7 @@
                     return;
                 }
                 const summaryInput = records.slice(0, 30).map(r =>
-                    `[${r.category}] ${r.content} (全新度 ${r.condition}%)`
+                    `[${r.category}] ${r.content} (全新度 ${r.condition != null ? r.condition : 100}%)`
                 ).join('\n');
                 const prompt = '以下是班級轉賣牆嘅留言。請用繁體中文，用 3-5 句概括同學最關心嘅問題、情緒同有冇明顯 patterns:\n\n' + summaryInput;
                 const result = await askAI(prompt);
