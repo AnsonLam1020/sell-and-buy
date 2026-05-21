@@ -24,12 +24,10 @@
                 <h1 class="text-xl font-bold tracking-tight text-slate-800">培正回收箱</h1>
             </div>
             <div class="flex items-center gap-3">
-                <!-- AI 摘要按鈕 -->
                 <button onclick="handleAISummary()" id="aiBtn" class="flex items-center gap-2 bg-zinc-800 text-zinc-100 px-4 py-2 rounded-full font-medium hover:bg-zinc-700 transition-colors active:scale-95 border border-zinc-700 disabled:opacity-50">
                     <i data-lucide="sparkles" class="w-4 h-4"></i>
                     <span id="aiBtnText">AI 摘要</span>
                 </button>
-                <!-- 原有發布按鈕 -->
                 <button onclick="openModal()" class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full font-medium hover:bg-blue-700 transition-colors active:scale-95">
                     <i data-lucide="edit-3" class="w-4 h-4"></i>
                     <span>我要吐槽</span>
@@ -169,10 +167,9 @@
 
     <script>
         // ============================================
-        // 培正回收箱 - Frontend JavaScript (合約版)
+        // 培正回收箱 - Frontend JavaScript（合約版）
         // ============================================
         
-        // Constants & Config
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwsjr7gYkShP2ju3d4hIVASMUHn_OYOqF5ecXqv7pjncJC0YbHK6Fmk4SXMDS3kXPYTcg/exec";
 
         const CATEGORY_TREE = {
@@ -193,9 +190,7 @@
         let currentStatusFilter = 'all';
         let currentSortBy = 'price-asc';
 
-        // ============================================
-        // 欄位大小寫標準化
-        // ============================================
+        // 1. 欄位標準化
         function normalizeRecord(record) {
             return {
                 id: record.id || record.ID || "",
@@ -207,9 +202,7 @@
             };
         }
 
-        // ============================================
-        // 從 Sheet GET 讀取
-        // ============================================
+        // 2. 用 GET 從 Sheet 讀取
         async function fetchRecordsFromSheet() {
             if (APPS_SCRIPT_URL.includes("PASTE")) return null;
             try {
@@ -222,9 +215,7 @@
             }
         }
 
-        // ============================================
-        // 主要資料載入 (Sheet 優先，localStorage fallback)
-        // ============================================
+        // 3. 主要資料載入 (Sheet 優先，localStorage 降級)
         async function loadData() {
             const remote = await fetchRecordsFromSheet();
             if (remote) {
@@ -235,9 +226,7 @@
             return data ? JSON.parse(data) : [];
         }
 
-        // ============================================
-        // 同步到 Sheet (POST)
-        // ============================================
+        // 4. 同步到 Sheet (前端欄位轉大階)
         function convertToSheetFormat(record) {
             const mapping = {
                 id: 'ID',
@@ -257,11 +246,7 @@
         }
 
         async function syncToSheet(payload) {
-            if (APPS_SCRIPT_URL.includes("PASTE")) {
-                console.warn("⚠️ 尚未設定 APPS_SCRIPT_URL，跳過同步");
-                return;
-            }
-            // 轉換為 Sheet 欄位格式
+            if (APPS_SCRIPT_URL.includes("PASTE")) return;
             if (payload.action === "create" && payload.record) {
                 payload.record = convertToSheetFormat(payload.record);
             } else if (payload.action === "update" && payload.changes) {
@@ -280,15 +265,13 @@
             }
         }
 
-        // ============================================
-        // CRUD 操作 (async，避免 GET 覆蓋新資料)
-        // ============================================
+        // 5. CRUD 操作 (async，避免 GET 覆蓋新資料)
         async function saveData(newRecord) {
             const records = await loadData();
-            records.push(newRecord);  // 將新記錄加到陣列末尾
+            records.push(newRecord);
             localStorage.setItem("records", JSON.stringify(records));
             syncToSheet({ action: "create", record: newRecord });
-            await renderList(records);  // 用最新 records 即時渲染
+            await renderList(records);
         }
 
         async function updateRecord(id, updates) {
@@ -310,9 +293,7 @@
             await renderList(records);
         }
 
-        // ============================================
-        // UI 渲染 (支援 recordsOverride)
-        // ============================================
+        // 6. UI 渲染 (支援 recordsOverride)
         async function renderList(recordsOverride) {
             const records = recordsOverride || await loadData();
             const grid = document.getElementById('itemGrid');
@@ -355,7 +336,7 @@
                 return matchesSearch && matchesCategory && matchesStatus && matchesPrice;
             });
 
-            // 排序：先未賣出，再依價格
+            // 排序：未賣出優先，再依價格
             filtered.sort((a, b) => {
                 const statusOrder = (i) => (i.status === 'done' ? 1 : 0);
                 if (statusOrder(a) !== statusOrder(b)) return statusOrder(a) - statusOrder(b);
@@ -423,9 +404,7 @@
             lucide.createIcons();
         }
 
-        // ============================================
-        // 互動功能 (改為 async)
-        // ============================================
+        // 7. 互動功能 (async)
         async function handleLike(id) {
             const records = await loadData();
             const index = records.findIndex(r => r.id === id);
@@ -465,9 +444,7 @@
             await renderList();
         }
 
-        // ============================================
-        // 類別下拉選單
-        // ============================================
+        // 8. 類別選單初始化
         function initCategorySelects() {
             const mainSelect = document.getElementById('mainCategorySelect');
             const modalMainSelect = document.getElementById('modalMainCategory');
@@ -514,9 +491,7 @@
             });
         }
 
-        // ============================================
-        // Modal 操作
-        // ============================================
+        // 9. Modal 操作
         function openModal() {
             document.getElementById('addItemModal').classList.remove('hidden');
         }
@@ -545,9 +520,7 @@
             e.target.reset();
         }
 
-        // ============================================
-        // AI 摘要功能
-        // ============================================
+        // 10. AI 摘要功能
         async function askAI(userPrompt) {
             const res = await fetch(APPS_SCRIPT_URL, {
                 method: "POST",
@@ -583,9 +556,7 @@
             }
         }
 
-        // ============================================
-        // 初始化
-        // ============================================
+        // 11. 初始化
         window.onload = async () => {
             document.getElementById('year').innerText = new Date().getFullYear();
             initCategorySelects();
