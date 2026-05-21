@@ -24,10 +24,12 @@
                 <h1 class="text-xl font-bold tracking-tight text-slate-800">培正回收箱</h1>
             </div>
             <div class="flex items-center gap-3">
+                <!-- AI 摘要按鈕 -->
                 <button onclick="handleAISummary()" id="aiBtn" class="flex items-center gap-2 bg-zinc-800 text-zinc-100 px-4 py-2 rounded-full font-medium hover:bg-zinc-700 transition-colors active:scale-95 border border-zinc-700 disabled:opacity-50">
                     <i data-lucide="sparkles" class="w-4 h-4"></i>
                     <span id="aiBtnText">AI 摘要</span>
                 </button>
+                <!-- 原有發布按鈕 -->
                 <button onclick="openModal()" class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full font-medium hover:bg-blue-700 transition-colors active:scale-95">
                     <i data-lucide="edit-3" class="w-4 h-4"></i>
                     <span>我要吐槽</span>
@@ -167,7 +169,7 @@
 
     <script>
         // ============================================
-        // 培正回收箱 - Frontend JavaScript (合約最終版)
+        // 培正回收箱 - Frontend JavaScript (合約版)
         // ============================================
         
         // Constants & Config
@@ -192,7 +194,7 @@
         let currentSortBy = 'price-asc';
 
         // ============================================
-        // 欄位標準化 (應對 Sheet 大階 header)
+        // 欄位大小寫標準化
         // ============================================
         function normalizeRecord(record) {
             return {
@@ -221,7 +223,7 @@
         }
 
         // ============================================
-        // 資料載入：Sheet 優先，localStorage 降級
+        // 主要資料載入 (Sheet 優先，localStorage fallback)
         // ============================================
         async function loadData() {
             const remote = await fetchRecordsFromSheet();
@@ -259,6 +261,7 @@
                 console.warn("⚠️ 尚未設定 APPS_SCRIPT_URL，跳過同步");
                 return;
             }
+            // 轉換為 Sheet 欄位格式
             if (payload.action === "create" && payload.record) {
                 payload.record = convertToSheetFormat(payload.record);
             } else if (payload.action === "update" && payload.changes) {
@@ -278,14 +281,14 @@
         }
 
         // ============================================
-        // CRUD 操作 (非同步、避免覆蓋新資料)
+        // CRUD 操作 (async，避免 GET 覆蓋新資料)
         // ============================================
         async function saveData(newRecord) {
             const records = await loadData();
-            records.unshift(newRecord);
+            records.push(newRecord);  // 將新記錄加到陣列末尾
             localStorage.setItem("records", JSON.stringify(records));
             syncToSheet({ action: "create", record: newRecord });
-            await renderList(records);
+            await renderList(records);  // 用最新 records 即時渲染
         }
 
         async function updateRecord(id, updates) {
@@ -308,7 +311,7 @@
         }
 
         // ============================================
-        // UI 渲染 (支援直接傳入 records 避免 GET 覆蓋)
+        // UI 渲染 (支援 recordsOverride)
         // ============================================
         async function renderList(recordsOverride) {
             const records = recordsOverride || await loadData();
@@ -352,7 +355,7 @@
                 return matchesSearch && matchesCategory && matchesStatus && matchesPrice;
             });
 
-            // Sort
+            // 排序：先未賣出，再依價格
             filtered.sort((a, b) => {
                 const statusOrder = (i) => (i.status === 'done' ? 1 : 0);
                 if (statusOrder(a) !== statusOrder(b)) return statusOrder(a) - statusOrder(b);
@@ -421,7 +424,7 @@
         }
 
         // ============================================
-        // 互動功能
+        // 互動功能 (改為 async)
         // ============================================
         async function handleLike(id) {
             const records = await loadData();
@@ -463,7 +466,7 @@
         }
 
         // ============================================
-        // 類別 UI
+        // 類別下拉選單
         // ============================================
         function initCategorySelects() {
             const mainSelect = document.getElementById('mainCategorySelect');
@@ -512,7 +515,7 @@
         }
 
         // ============================================
-        // Modal
+        // Modal 操作
         // ============================================
         function openModal() {
             document.getElementById('addItemModal').classList.remove('hidden');
@@ -563,7 +566,7 @@
             try {
                 const records = await loadData();
                 if (records.length === 0) {
-                    alert('未有吐槽資料可以摘要');
+                    alert('未有轉賣資料可以摘要');
                     return;
                 }
                 const summaryInput = records.slice(0, 30).map(r =>
@@ -587,6 +590,7 @@
             document.getElementById('year').innerText = new Date().getFullYear();
             initCategorySelects();
             await renderList();
+            lucide.createIcons();
         };
     </script>
 </body>
