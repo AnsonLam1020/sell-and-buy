@@ -30,7 +30,7 @@
                 </button>
                 <button onclick="openModal()" class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-full font-medium hover:bg-blue-700 transition-colors active:scale-95">
                     <i data-lucide="edit-3" class="w-4 h-4"></i>
-                    <span>我要吐槽</span>
+                    <span>我要轉賣</span>
                 </button>
             </div>
         </div>
@@ -167,7 +167,7 @@
 
     <script>
         // ============================================
-        // 培正回收箱 - Frontend JavaScript（修正版 - 強制字串轉換）
+        // 培正回收箱 - Frontend JavaScript（喜歡切換版）
         // ============================================
         
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAolZlRu_FkosrdUAr3q3450xey6g8tYcIrOt5dbcwbZbL-97006olyuj6qm2x3jD2Sg/exec";
@@ -190,7 +190,7 @@
         let currentStatusFilter = 'all';
         let currentSortBy = 'price-asc';
 
-        // 1. 欄位標準化 (強制文字欄位轉字串，避免 .toLowerCase 報錯)
+        // 1. 欄位標準化 (支援布林轉數字)
         function normalizeRecord(record) {
             return {
                 id: String(record.id || record.ID || ""),
@@ -306,7 +306,7 @@
             const priceRange = document.getElementById('priceRangeSelect').value;
 
             const filtered = records.filter(item => {
-                const content = item.content || '';  // 已保證為字串，但保留防禦
+                const content = item.content || '';
                 const matchesSearch = content.toLowerCase().includes(searchQuery);
                 
                 let matchesCategory = true;
@@ -406,12 +406,13 @@
             lucide.createIcons();
         }
 
-        // 7. 互動功能 (async)
+        // 7. 互動功能 (改為切換喜歡)
         async function handleLike(id) {
             const records = await loadData();
             const index = records.findIndex(r => r.id === id);
             if (index !== -1) {
-                records[index].likes = (records[index].likes || 0) + 1;
+                // 切換：1 -> 0, 0 -> 1
+                records[index].likes = records[index].likes ? 0 : 1;
                 localStorage.setItem("records", JSON.stringify(records));
                 syncToSheet({ action: "update", id: id, changes: { likes: records[index].likes } });
                 await renderList(records);
@@ -547,7 +548,7 @@
                 const summaryInput = records.slice(0, 30).map(r =>
                     `[${r.category}] ${r.content}`
                 ).join('\n');
-                const prompt = '以下是班級吐槽牆嘅留言。請用繁體中文，用 3-5 句概括同學最關心嘅問題、情緒同有冇明顯 patterns:\n\n' + summaryInput;
+                const prompt = '以下是班級轉賣牆嘅留言。請用繁體中文，用 3-5 句概括同學最關心嘅問題、情緒同有冇明顯 patterns:\n\n' + summaryInput;
                 const result = await askAI(prompt);
                 alert(result);
             } catch (e) {
