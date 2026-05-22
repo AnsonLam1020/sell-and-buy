@@ -11,7 +11,6 @@
         body { font-family: 'Inter', sans-serif; }
         .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         
-        /* 心心動畫 */
         @keyframes heartBeat {
             0% { transform: scale(1); }
             25% { transform: scale(1.3); }
@@ -22,7 +21,6 @@
             animation: heartBeat 0.4s ease-in-out;
         }
         
-        /* Toast 提示 */
         .toast {
             position: fixed;
             top: 5rem;
@@ -68,104 +66,88 @@
         <span>✅ 已成功發佈！</span>
     </div>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+    <!-- 固定搜尋與排序列 -->
+    <div class="sticky top-16 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 px-4 sm:px-6 lg:px-8 py-3">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center gap-3">
+            <!-- 搜尋 -->
+            <div class="relative flex-1 min-w-[200px]">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                <input type="text" id="searchInput" oninput="renderList()" placeholder="搜索物品..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
+            </div>
+            <!-- 排序切換 -->
+            <button onclick="toggleSort()" class="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 hover:bg-slate-100 transition-all text-sm">
+                <i data-lucide="refresh-cw" id="sortIcon" class="w-4 h-4 text-slate-400 transition-transform duration-500"></i>
+                <span id="sortLabel" class="text-slate-600 font-medium">價格</span>
+            </button>
+            <!-- 更多篩選（手機） -->
+            <button id="toggleFilterBtn" onclick="toggleMoreFilters()" class="lg:hidden flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 hover:bg-slate-100 transition-all text-sm">
+                <i data-lucide="sliders-horizontal" class="w-4 h-4 text-slate-400"></i>
+                <span class="text-slate-600 font-medium">篩選</span>
+            </button>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1">
         
         <!-- Status Filter Tabs -->
-        <div id="statusTabs" class="flex gap-2 mb-6 bg-slate-100 p-1 rounded-2xl w-fit">
+        <div id="statusTabs" class="flex gap-2 mb-4 bg-slate-100 p-1 rounded-2xl w-fit">
             <button onclick="setStatusFilter('all')" class="status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all bg-white text-blue-600 shadow-sm" data-status="all">全部</button>
             <button onclick="setStatusFilter('active')" class="status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-slate-500 hover:text-slate-700" data-status="active">只看未賣出</button>
             <button onclick="setStatusFilter('done')" class="status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-slate-500 hover:text-slate-700" data-status="done">只看已賣出</button>
             <button onclick="setStatusFilter('interested')" class="status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-slate-500 hover:text-slate-700" data-status="interested">只看有興趣</button>
         </div>
 
-        <!-- Filter Bar (sticky) -->
-        <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-8 sticky top-20 z-30">
-            <div class="flex flex-wrap gap-4 items-center">
-                <!-- 搜尋（永遠顯示） -->
-                <div class="relative w-full md:flex-[2] min-w-[200px]">
-                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
-                    <input type="text" id="searchInput" oninput="renderList()" placeholder="搜索物品..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
-                </div>
-                
-                <!-- 排序（永遠顯示） -->
-                <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[160px]">
-                    <button onclick="toggleSort()" class="flex-1 flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 hover:bg-slate-100 transition-all text-sm group">
-                        <div class="flex items-center gap-2 text-slate-400 group-hover:text-blue-600 truncate">
-                            <i data-lucide="refresh-cw" id="sortIcon" class="w-4 h-4 shrink-0 transition-transform duration-500"></i>
-                            <span id="sortLabel" class="text-slate-600 font-medium truncate">價格：由低至高</span>
-                        </div>
-                        <div class="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shrink-0 ml-1">切換</div>
-                    </button>
-                </div>
-
-                <!-- 更多篩選按鈕（手機可見） -->
-                <button id="toggleFilterBtn" onclick="toggleMoreFilters()" class="lg:hidden w-full mt-2 bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors">
-                    <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
-                    <span>更多篩選</span>
-                </button>
-
-                <!-- 可收摺的篩選區塊 -->
-                <div id="extraFilters" class="hidden lg:flex flex-wrap gap-4 w-full lg:w-auto">
-                    <!-- Main Category -->
-                    <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
-                        <i data-lucide="filter" class="text-slate-400 w-4 h-4"></i>
-                        <select id="mainCategorySelect" onchange="updateSubCategories(); renderList();" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
-                            <option value="全部">所有大類別</option>
-                        </select>
-                    </div>
-
-                    <!-- Sub Category -->
-                    <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
-                        <i data-lucide="filter" class="text-slate-400 w-4 h-4"></i>
-                        <select id="subCategorySelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none disabled:opacity-50" disabled>
-                            <option value="全部">所有細類別</option>
-                        </select>
-                    </div>
-
-                    <!-- Price Range -->
-                    <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[120px]">
-                        <i data-lucide="dollar-sign" class="text-slate-400 w-4 h-4"></i>
-                        <select id="priceRangeSelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
-                            <option value="all">全部價錢</option>
-                            <option value="0-200">$0 - $200</option>
-                            <option value="201-400">$201 - $400</option>
-                            <option value="401-600">$401 - $600</option>
-                            <option value="601-800">$601 - $800</option>
-                            <option value="801-1000">$801 - $1000</option>
-                            <option value="1001-up">> $1000</option>
-                        </select>
-                    </div>
-
-                    <!-- 全新度篩選 -->
-                    <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
-                        <i data-lucide="star" class="text-slate-400 w-4 h-4"></i>
-                        <select id="conditionSelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
-                            <option value="all">全部全新度</option>
-                            <option value="0-20">0 – 20%</option>
-                            <option value="21-40">21 – 40%</option>
-                            <option value="41-60">41 – 60%</option>
-                            <option value="61-80">61 – 80%</option>
-                            <option value="81-100">81 – 100%</option>
-                        </select>
-                    </div>
-                </div>
-
-                <button onclick="openModal()" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 active:scale-95">
-                    <i data-lucide="plus" class="w-5 h-5"></i>
-                    <span>發佈物件</span>
-                </button>
+        <!-- 篩選器（大螢幕一直顯示，手機預設隱藏） -->
+        <div id="extraFilters" class="hidden lg:flex flex-wrap gap-4 mb-6 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+            <!-- Main Category -->
+            <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
+                <i data-lucide="filter" class="text-slate-400 w-4 h-4"></i>
+                <select id="mainCategorySelect" onchange="updateSubCategories(); renderList();" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
+                    <option value="全部">所有大類別</option>
+                </select>
             </div>
-        </section>
+            <!-- Sub Category -->
+            <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
+                <i data-lucide="filter" class="text-slate-400 w-4 h-4"></i>
+                <select id="subCategorySelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none disabled:opacity-50" disabled>
+                    <option value="全部">所有細類別</option>
+                </select>
+            </div>
+            <!-- Price Range -->
+            <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[120px]">
+                <i data-lucide="dollar-sign" class="text-slate-400 w-4 h-4"></i>
+                <select id="priceRangeSelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
+                    <option value="all">全部價錢</option>
+                    <option value="0-200">$0 - $200</option>
+                    <option value="201-400">$201 - $400</option>
+                    <option value="401-600">$401 - $600</option>
+                    <option value="601-800">$601 - $800</option>
+                    <option value="801-1000">$801 - $1000</option>
+                    <option value="1001-up">> $1000</option>
+                </select>
+            </div>
+            <!-- Condition -->
+            <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
+                <i data-lucide="star" class="text-slate-400 w-4 h-4"></i>
+                <select id="conditionSelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
+                    <option value="all">全部全新度</option>
+                    <option value="0-20">0 – 20%</option>
+                    <option value="21-40">21 – 40%</option>
+                    <option value="41-60">41 – 60%</option>
+                    <option value="61-80">61 – 80%</option>
+                    <option value="81-100">81 – 100%</option>
+                </select>
+            </div>
+        </div>
 
-        <!-- Helper Note (只在首訪時彈出 tooltip，此處保留原句作為靜態提醒) -->
-        <div class="mb-8 flex items-center gap-2 px-4 py-3 bg-red-50/30 border border-red-100/50 rounded-2xl">
+        <!-- Helper Note -->
+        <div class="mb-6 flex items-center gap-2 px-4 py-3 bg-red-50/30 border border-red-100/50 rounded-2xl">
             <span class="text-red-600 font-black text-xl leading-none">！</span>
             <p class="text-slate-600 text-sm font-bold">有沒有興趣只會出現在尚未賣出的貨品</p>
         </div>
 
         <!-- Item Grid -->
         <div id="itemGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <!-- Items injected by JS -->
         </div>
 
         <div id="emptyState" class="hidden text-center py-20">
@@ -178,8 +160,8 @@
     </main>
 
     <!-- Footer -->
-    <footer class="mt-auto bg-white border-t border-slate-200 py-6 shadow-[0_-1px_3px_0_rgba(0,0,0,0.05)]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-[10px] text-slate-300 font-medium">
+    <footer class="mt-auto bg-white border-t border-slate-200 py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center text-[10px] text-slate-300 font-medium">
             &copy; <span id="year"></span> 培正回收箱 · 綠色校園 資源共享
         </div>
     </footer>
@@ -194,7 +176,6 @@
                     <label class="block text-sm font-bold text-slate-700 mb-2">物件名稱</label>
                     <input type="text" id="itemContent" required placeholder="例如：二手筆記本" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none">
                 </div>
-                
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-2">大類別</label>
@@ -205,18 +186,14 @@
                         <select id="modalSubCategory" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none"></select>
                     </div>
                 </div>
-
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">價錢 (HKD)</label>
                     <input type="number" id="itemPrice" required placeholder="0" min="0" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none">
                 </div>
-
-                <!-- 全新度輸入 -->
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">全新度 (0–100)</label>
                     <input type="number" id="itemCondition" required min="0" max="100" value="100" placeholder="100" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none">
                 </div>
-
                 <div class="flex gap-3 pt-2">
                     <button type="button" onclick="closeModal()" class="flex-1 px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-all">取消</button>
                     <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">發佈物件</button>
@@ -254,12 +231,7 @@
     </div>
 
     <script>
-        // ============================================
-        // 培正回收箱 - Frontend JavaScript（UX 升級版）
-        // ============================================
-        
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAolZlRu_FkosrdUAr3q3450xey6g8tYcIrOt5dbcwbZbL-97006olyuj6qm2x3jD2Sg/exec";
-
         const CATEGORY_TREE = {
             "電子產品": ["電話", "平板電腦", "手提電腦", "電子配件"],
             "書籍": ["中文書籍", "英文書籍", "數學書籍", "其他書籍"],
@@ -267,21 +239,17 @@
             "家居用品": ["廚具", "家具", "裝飾品"],
             "其他": ["其他"]
         };
-
         const CATEGORY_ICONS = {
             "電話": "smartphone", "平板電腦": "tablet", "手提電腦": "laptop", "電子配件": "cpu",
             "中文書籍": "book-text", "英文書籍": "book-open", "數學書籍": "calculator", "其他書籍": "book",
             "男裝": "shirt", "女裝": "shirt", "童裝": "baby",
             "廚具": "utensils", "家具": "sofa", "裝飾品": "flower", "其他": "more-horizontal"
         };
-
         let currentStatusFilter = 'all';
         let currentSortBy = 'price-asc';
-        let pendingDeleteId = null; // 暫存待刪除 ID
+        let pendingDeleteId = null;
 
-        // ============================================
-        // 全新度輔助函數
-        // ============================================
+        // 全新度輔助
         function getConditionColor(cond) {
             if (cond >= 80) return 'bg-green-500';
             if (cond >= 40) return 'bg-yellow-500';
@@ -298,9 +266,6 @@
             return 'text-gray-600';
         }
 
-        // ============================================
-        // 欄位標準化
-        // ============================================
         function normalizeRecord(record) {
             return {
                 id: String(record.id || record.ID || ""),
@@ -314,486 +279,302 @@
             };
         }
 
-        // ============================================
-        // 從 Sheet 讀取
-        // ============================================
         async function fetchRecordsFromSheet() {
             if (APPS_SCRIPT_URL.includes("PASTE")) return null;
             try {
                 const res = await fetch(APPS_SCRIPT_URL);
                 const data = await res.json();
                 return Array.isArray(data.records) ? data.records.map(normalizeRecord) : null;
-            } catch (e) {
-                console.warn("從 Sheet 讀取失敗", e);
-                return null;
-            }
+            } catch (e) { console.warn("從 Sheet 讀取失敗", e); return null; }
         }
 
         async function loadData() {
             const remote = await fetchRecordsFromSheet();
-            if (remote) {
-                localStorage.setItem("records", JSON.stringify(remote));
-                return remote;
-            }
+            if (remote) { localStorage.setItem("records", JSON.stringify(remote)); return remote; }
             const data = localStorage.getItem("records");
             return data ? JSON.parse(data) : [];
         }
 
-        // ============================================
-        // 同步至 Sheet
-        // ============================================
         function convertToSheetFormat(record) {
-            const mapping = {
-                id: 'ID', createdAt: 'CreatedAt', content: 'Content',
-                category: 'Category', price: 'Price', likes: 'Likes',
-                status: 'Status', condition: 'Condition'
-            };
-            const sheetRecord = {};
-            for (let key in record) {
-                const sheetKey = mapping[key] || key;
-                sheetRecord[sheetKey] = record[key];
-            }
-            return sheetRecord;
+            const m = { id:'ID', createdAt:'CreatedAt', content:'Content', category:'Category', price:'Price', likes:'Likes', status:'Status', condition:'Condition' };
+            const r = {};
+            for (let k in record) r[m[k]||k] = record[k];
+            return r;
         }
 
         async function syncToSheet(payload) {
             if (APPS_SCRIPT_URL.includes("PASTE")) return;
-            if (payload.action === "create" && payload.record) {
-                payload.record = convertToSheetFormat(payload.record);
-            } else if (payload.action === "update" && payload.changes) {
-                payload.changes = convertToSheetFormat(payload.changes);
-            }
+            if (payload.action==="create" && payload.record) payload.record = convertToSheetFormat(payload.record);
+            else if (payload.action==="update" && payload.changes) payload.changes = convertToSheetFormat(payload.changes);
             try {
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "text/plain" },
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-                console.log("✅ 同步成功:", result);
-            } catch (e) {
-                console.warn("⚠️ 同步到 Sheet 失敗", e);
-            }
+                await fetch(APPS_SCRIPT_URL, { method:"POST", headers:{"Content-Type":"text/plain"}, body: JSON.stringify(payload) });
+            } catch(e) { console.warn("同步失敗", e); }
         }
 
-        // ============================================
-        // CRUD
-        // ============================================
         async function saveData(newRecord) {
             const records = await loadData();
             records.push(newRecord);
             localStorage.setItem("records", JSON.stringify(records));
-            syncToSheet({ action: "create", record: newRecord });
-            showToast();   // 成功提示
+            syncToSheet({ action:"create", record: newRecord });
+            showToast();
             await renderList(records);
         }
 
         async function updateRecord(id, updates) {
             const records = await loadData();
-            const index = records.findIndex(r => r.id === id);
-            if (index !== -1) {
-                records[index] = { ...records[index], ...updates };
-                localStorage.setItem("records", JSON.stringify(records));
-                syncToSheet({ action: "update", id: id, changes: updates });
-                await renderList(records);
-            }
+            const i = records.findIndex(r => r.id===id);
+            if (i!==-1) { Object.assign(records[i], updates); localStorage.setItem("records", JSON.stringify(records)); syncToSheet({ action:"update", id, changes: updates }); await renderList(records); }
         }
 
         async function deleteRecord(id) {
             let records = await loadData();
-            records = records.filter(r => r.id !== id);
+            records = records.filter(r => r.id!==id);
             localStorage.setItem("records", JSON.stringify(records));
-            syncToSheet({ action: "delete", id: id });
+            syncToSheet({ action:"delete", id });
             await renderList(records);
         }
 
-        // ============================================
-        // Toast 提示
-        // ============================================
         function showToast() {
-            const toast = document.getElementById('successToast');
-            toast.classList.remove('toast-hidden');
-            setTimeout(() => {
-                toast.classList.add('toast-hidden');
-            }, 3000);
+            const t = document.getElementById('successToast');
+            t.classList.remove('toast-hidden');
+            setTimeout(() => t.classList.add('toast-hidden'), 3000);
         }
 
-        // ============================================
-        // 刪除確認
-        // ============================================
-        function confirmDelete(id, itemName) {
+        function confirmDelete(id, name) {
             pendingDeleteId = id;
-            document.getElementById('confirmDeleteMsg').innerText = `確定要刪除「${itemName}」嗎？`;
+            document.getElementById('confirmDeleteMsg').innerText = `確定要刪除「${name}」嗎？`;
             document.getElementById('confirmDeleteModal').classList.remove('hidden');
         }
-        function closeConfirmDelete() {
-            document.getElementById('confirmDeleteModal').classList.add('hidden');
-            pendingDeleteId = null;
-        }
-        document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
-            if (pendingDeleteId) {
-                await deleteRecord(pendingDeleteId);
-                closeConfirmDelete();
-            }
-        });
+        function closeConfirmDelete() { document.getElementById('confirmDeleteModal').classList.add('hidden'); pendingDeleteId = null; }
+        document.getElementById('confirmDeleteBtn').addEventListener('click', async () => { if(pendingDeleteId) { await deleteRecord(pendingDeleteId); closeConfirmDelete(); } });
 
-        // ============================================
-        // 更多篩選切換（手機）
-        // ============================================
+        // 更多篩選切換
         function toggleMoreFilters() {
             const extra = document.getElementById('extraFilters');
-            extra.classList.toggle('hidden');
-            extra.classList.toggle('lg:flex'); // 保持大螢幕顯示
+            if (extra.classList.contains('hidden')) {
+                extra.classList.remove('hidden');
+                extra.classList.add('flex'); // 確保顯示
+            } else {
+                extra.classList.add('hidden');
+                extra.classList.remove('flex');
+            }
         }
 
-        // ============================================
-        // UI 渲染
-        // ============================================
+        // 類別計數（修正：由細類別對應大類別）
+        function updateCategoryCounts(records) {
+            const mainSelect = document.getElementById('mainCategorySelect');
+            const countMap = {};
+            for (let main in CATEGORY_TREE) countMap[main] = 0;
+            records.forEach(item => {
+                const sub = item.category;
+                for (let main in CATEGORY_TREE) {
+                    if (CATEGORY_TREE[main].includes(sub)) {
+                        countMap[main]++;
+                        break;
+                    }
+                }
+            });
+            const options = mainSelect.querySelectorAll('option');
+            options.forEach(opt => {
+                if (opt.value !== '全部') {
+                    opt.textContent = `${opt.value} (${countMap[opt.value] || 0})`;
+                }
+            });
+        }
+
         async function renderList(recordsOverride) {
             const records = recordsOverride || await loadData();
             const grid = document.getElementById('itemGrid');
-            const emptyState = document.getElementById('emptyState');
-            
-            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const empty = document.getElementById('emptyState');
+            const search = document.getElementById('searchInput').value.toLowerCase();
             const mainCat = document.getElementById('mainCategorySelect').value;
             const subCat = document.getElementById('subCategorySelect').value;
             const priceRange = document.getElementById('priceRangeSelect').value;
-            const conditionRange = document.getElementById('conditionSelect').value;
+            const condRange = document.getElementById('conditionSelect').value;
 
             const filtered = records.filter(item => {
-                const content = item.content || '';
-                const matchesSearch = content.toLowerCase().includes(searchQuery);
-                
-                let matchesCategory = true;
+                const c = (item.content||'').toLowerCase();
+                if (search && !c.includes(search)) return false;
                 if (mainCat !== '全部') {
-                    const allowedSubs = CATEGORY_TREE[mainCat] || [];
-                    if (subCat !== '全部') {
-                        matchesCategory = item.category === subCat;
-                    } else {
-                        matchesCategory = allowedSubs.includes(item.category);
-                    }
+                    const subs = CATEGORY_TREE[mainCat] || [];
+                    if (subCat !== '全部') { if (item.category !== subCat) return false; }
+                    else { if (!subs.includes(item.category)) return false; }
                 }
-
-                let matchesStatus = true;
-                if (currentStatusFilter === 'active') matchesStatus = item.status === 'active';
-                else if (currentStatusFilter === 'done') matchesStatus = item.status === 'done';
-                else if (currentStatusFilter === 'interested') matchesStatus = item.likes > 0 && item.status !== 'done';
-
-                let matchesPrice = true;
+                if (currentStatusFilter==='active' && item.status!=='active') return false;
+                if (currentStatusFilter==='done' && item.status!=='done') return false;
+                if (currentStatusFilter==='interested' && (item.likes<=0 || item.status==='done')) return false;
                 if (priceRange !== 'all') {
-                    const price = item.price || 0;
-                    if (priceRange === '1001-up') matchesPrice = price > 1000;
+                    const p = item.price||0;
+                    if (priceRange==='1001-up') { if (p<=1000) return false; }
                     else {
-                        const [min, max] = priceRange.split('-').map(Number);
-                        matchesPrice = price >= min && price <= max;
+                        const [min,max] = priceRange.split('-').map(Number);
+                        if (p<min || p>max) return false;
                     }
                 }
-
-                let matchesCondition = true;
-                if (conditionRange !== 'all') {
-                    const cond = item.condition != null ? item.condition : 100;
-                    const [min, max] = conditionRange.split('-').map(Number);
-                    matchesCondition = cond >= min && cond <= max;
+                if (condRange !== 'all') {
+                    const cond = item.condition!=null ? item.condition : 100;
+                    const [min,max] = condRange.split('-').map(Number);
+                    if (cond<min || cond>max) return false;
                 }
-
-                return matchesSearch && matchesCategory && matchesStatus && matchesPrice && matchesCondition;
+                return true;
             });
 
-            filtered.sort((a, b) => {
-                const statusOrder = (i) => (i.status === 'done' ? 1 : 0);
-                if (statusOrder(a) !== statusOrder(b)) return statusOrder(a) - statusOrder(b);
-                if (currentSortBy === 'price-asc') return (a.price || 0) - (b.price || 0);
-                return (b.price || 0) - (a.price || 0);
+            filtered.sort((a,b) => {
+                const sa = a.status==='done'?1:0, sb = b.status==='done'?1:0;
+                if (sa!==sb) return sa-sb;
+                return currentSortBy==='price-asc' ? (a.price||0)-(b.price||0) : (b.price||0)-(a.price||0);
             });
 
-            // 更新類別計數
             updateCategoryCounts(records);
 
             grid.innerHTML = '';
-            if (filtered.length === 0) {
-                emptyState.classList.remove('hidden');
-            } else {
-                emptyState.classList.add('hidden');
+            if (filtered.length===0) empty.classList.remove('hidden');
+            else {
+                empty.classList.add('hidden');
                 filtered.forEach(item => {
-                    const isSold = item.status === 'done';
-                    const isLiked = item.likes > 0 && !isSold;
-                    const displayPrice = item.price || 0;
-                    const cond = item.condition != null ? item.condition : 100;
-                    const condColor = getConditionColor(cond);
-                    const condLabel = getConditionLabel(cond);
-                    const condTextColor = getConditionTextColor(cond);
-                    
+                    const sold = item.status==='done';
+                    const liked = item.likes>0 && !sold;
+                    const cond = item.condition!=null ? item.condition : 100;
                     const card = document.createElement('div');
-                    card.className = `rounded-2xl p-5 border shadow-sm hover:shadow-md transition-all group ${
-                        isLiked 
-                        ? 'ring-2 ring-red-500 border-red-500 bg-red-50/10' 
-                        : isSold ? 'bg-green-50/80 border-green-100 opacity-90' : 'bg-white border-slate-100'
-                    }`;
-
+                    card.className = `rounded-2xl p-5 border shadow-sm hover:shadow-md transition-all group ${liked?'ring-2 ring-red-500 border-red-500 bg-red-50/10': (sold?'bg-green-50/80 border-green-100 opacity-90':'bg-white border-slate-100')}`;
                     card.innerHTML = `
                         <div class="flex justify-between items-start mb-4">
-                            <div class="bg-slate-50 p-3 rounded-xl group-hover:bg-blue-50 transition-colors">
-                                <i data-lucide="${CATEGORY_ICONS[item.category] || 'package'}" class="w-6 h-6 text-slate-400"></i>
-                            </div>
+                            <div class="bg-slate-50 p-3 rounded-xl"><i data-lucide="${CATEGORY_ICONS[item.category]||'package'}" class="w-6 h-6 text-slate-400"></i></div>
                             <div class="flex flex-col items-end gap-2 text-right">
                                 <div class="flex items-center gap-2">
-                                    ${!isSold ? `
-                                        <button onclick="handleLike('${item.id}')" class="like-btn p-1.5 rounded-full transition-all ${item.likes > 0 ? 'text-red-500 bg-red-50' : 'text-slate-300 hover:text-red-400 hover:bg-slate-50'}">
-                                            <i data-lucide="heart" class="w-4 h-4 ${item.likes > 0 ? 'fill-current' : ''}"></i>
-                                        </button>
-                                    ` : ''}
-                                    <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold uppercase tracking-wider">
-                                        ${item.category}
-                                    </span>
+                                    ${!sold?`<button onclick="handleLike('${item.id}')" class="like-btn p-1.5 rounded-full ${liked?'text-red-500 bg-red-50':'text-slate-300 hover:text-red-400'}"><i data-lucide="heart" class="w-4 h-4 ${liked?'fill-current':''}"></i></button>`:''}
+                                    <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">${item.category}</span>
                                 </div>
-                                ${isSold ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-black">[已賣出]</span>' : ''}
+                                ${sold?'<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-black">[已賣出]</span>':''}
                             </div>
                         </div>
                         <h3 class="text-lg font-bold text-slate-800 mb-1 truncate">${item.content}</h3>
-                        <div class="flex items-baseline gap-1 mb-1">
-                            <span class="text-2xl font-black text-blue-600">$${displayPrice}</span>
-                        </div>
-                        <!-- 全新度進度條 + 標籤 -->
+                        <div class="text-2xl font-black text-blue-600 mb-1">$${item.price||0}</div>
                         <div class="mb-4">
                             <div class="flex items-center justify-between text-xs mb-1">
-                                <span class="font-bold ${condTextColor}">${condLabel}</span>
+                                <span class="font-bold ${getConditionTextColor(cond)}">${getConditionLabel(cond)}</span>
                                 <span class="text-slate-500">${cond}%</span>
                             </div>
-                            <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full ${condColor} rounded-full" style="width: ${cond}%"></div>
-                            </div>
+                            <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden"><div class="h-full ${getConditionColor(cond)} rounded-full" style="width:${cond}%"></div></div>
                         </div>
                         <div class="pt-4 border-t border-slate-50 flex items-center justify-between">
-                            <div class="flex items-center gap-2 text-slate-400 text-xs">
-                                <i data-lucide="tag" class="w-3 h-3"></i>
-                                <span>${new Date(item.createdAt).toLocaleDateString()}</span>
-                            </div>
+                            <div class="flex items-center gap-2 text-slate-400 text-xs"><i data-lucide="tag" class="w-3 h-3"></i>${new Date(item.createdAt).toLocaleDateString()}</div>
                             <div class="flex items-center gap-2">
-                                <button onclick="toggleStatus('${item.id}')" class="text-xs font-bold px-2 py-1 rounded transition-colors ${isSold ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
-                                    ${isSold ? '恢復上架' : '尚未賣出'}
-                                </button>
-                                <button onclick="confirmDelete('${item.id}', '${item.content.replace(/'/g, "\\'")}')" class="text-slate-300 hover:text-red-500 transition-colors">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                </button>
+                                <button onclick="toggleStatus('${item.id}')" class="text-xs font-bold px-2 py-1 rounded ${sold?'bg-green-100 text-green-700':'bg-slate-100 text-slate-600'}">${sold?'恢復上架':'尚未賣出'}</button>
+                                <button onclick="confirmDelete('${item.id}','${item.content.replace(/'/g,"\\'")}')" class="text-slate-300 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                     grid.appendChild(card);
                 });
             }
             lucide.createIcons();
         }
 
-        // ============================================
-        // 類別計數更新
-        // ============================================
-        function updateCategoryCounts(records) {
-            const mainSelect = document.getElementById('mainCategorySelect');
-            // 先儲存 value 對應的原始文字（不包含數字）
-            const options = mainSelect.querySelectorAll('option');
-            const countMap = {};
-            options.forEach(opt => {
-                if (opt.value !== '全部') {
-                    countMap[opt.value] = 0;
-                }
-            });
-            records.forEach(r => {
-                if (countMap.hasOwnProperty(r.category)) {
-                    countMap[r.category]++;
-                }
-            });
-            options.forEach(opt => {
-                if (opt.value !== '全部') {
-                    const count = countMap[opt.value] || 0;
-                    opt.textContent = `${opt.value} (${count})`;
-                }
-            });
-        }
-
-        // ============================================
-        // 互動功能
-        // ============================================
         async function handleLike(id) {
             const records = await loadData();
-            const index = records.findIndex(r => r.id === id);
-            if (index !== -1) {
-                records[index].likes = records[index].likes ? 0 : 1;
+            const i = records.findIndex(r => r.id===id);
+            if (i!==-1) {
+                records[i].likes = records[i].likes ? 0 : 1;
                 localStorage.setItem("records", JSON.stringify(records));
-                syncToSheet({ action: "update", id: id, changes: { likes: records[index].likes } });
-                
-                // 心心動畫
+                syncToSheet({ action:"update", id, changes: { likes: records[i].likes } });
                 const btn = document.querySelector(`button[onclick="handleLike('${id}')"]`);
-                if (btn) {
-                    btn.classList.add('heart-beat');
-                    setTimeout(() => btn.classList.remove('heart-beat'), 400);
-                }
+                if (btn) { btn.classList.add('heart-beat'); setTimeout(() => btn.classList.remove('heart-beat'), 400); }
                 await renderList(records);
             }
         }
 
         async function toggleStatus(id) {
             const records = await loadData();
-            const item = records.find(r => r.id === id);
+            const item = records.find(r => r.id===id);
             if (item) {
-                const newStatus = item.status === 'active' ? 'done' : 'active';
+                const newStatus = item.status==='active'?'done':'active';
                 await updateRecord(id, { status: newStatus });
             }
         }
 
-        async function setStatusFilter(status) {
-            currentStatusFilter = status;
-            document.querySelectorAll('.status-btn').forEach(btn => {
-                if (btn.getAttribute('data-status') === status) {
-                    btn.className = `status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all ${status === 'interested' ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-blue-600 shadow-sm'}`;
-                } else {
-                    btn.className = 'status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-slate-500 hover:text-slate-700';
-                }
+        async function setStatusFilter(s) {
+            currentStatusFilter = s;
+            document.querySelectorAll('.status-btn').forEach(b => {
+                b.className = `status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all ${b.dataset.status===s? (s==='interested'?'bg-red-500 text-white shadow-sm':'bg-white text-blue-600 shadow-sm') : 'text-slate-500 hover:text-slate-700'}`;
             });
             await renderList();
         }
 
         async function toggleSort() {
-            currentSortBy = currentSortBy === 'price-asc' ? 'price-desc' : 'price-asc';
-            document.getElementById('sortLabel').innerText = currentSortBy === 'price-asc' ? '價格：由低至高' : '價格：由高至低';
-            document.getElementById('sortIcon').style.transform = currentSortBy === 'price-desc' ? 'rotate(180deg)' : 'rotate(0deg)';
+            currentSortBy = currentSortBy==='price-asc'?'price-desc':'price-asc';
+            document.getElementById('sortLabel').innerText = currentSortBy==='price-asc'?'由低至高':'由高至低';
+            document.getElementById('sortIcon').style.transform = currentSortBy==='price-desc'?'rotate(180deg)':'rotate(0deg)';
             await renderList();
         }
 
-        // ============================================
-        // 類別下拉初始化
-        // ============================================
         function initCategorySelects() {
-            const mainSelect = document.getElementById('mainCategorySelect');
-            const modalMainSelect = document.getElementById('modalMainCategory');
-            // 清空現有選項，避免重複
-            mainSelect.innerHTML = '<option value="全部">所有大類別</option>';
-            modalMainSelect.innerHTML = '';
-            Object.keys(CATEGORY_TREE).forEach(main => {
-                const opt = document.createElement('option');
-                opt.value = main;
-                opt.innerText = main;  // 會在被 updateCategoryCounts 更新
-                mainSelect.appendChild(opt);
-                
-                const optModal = document.createElement('option');
-                optModal.value = main;
-                optModal.innerText = main;
-                modalMainSelect.appendChild(optModal);
+            const main = document.getElementById('mainCategorySelect');
+            const modal = document.getElementById('modalMainCategory');
+            main.innerHTML = '<option value="全部">所有大類別</option>';
+            modal.innerHTML = '';
+            Object.keys(CATEGORY_TREE).forEach(cat => {
+                main.add(new Option(cat, cat));
+                modal.add(new Option(cat, cat));
             });
             updateModalSubCategories();
         }
 
         function updateSubCategories() {
             const main = document.getElementById('mainCategorySelect').value;
-            const subSelect = document.getElementById('subCategorySelect');
-            subSelect.innerHTML = '<option value="全部">所有細類別</option>';
-            if (main === '全部') {
-                subSelect.disabled = true;
-            } else {
-                subSelect.disabled = false;
-                CATEGORY_TREE[main].forEach(sub => {
-                    const opt = document.createElement('option');
-                    opt.value = sub;
-                    opt.innerText = sub;
-                    subSelect.appendChild(opt);
-                });
-            }
+            const sub = document.getElementById('subCategorySelect');
+            sub.innerHTML = '<option value="全部">所有細類別</option>';
+            if (main!=='全部') {
+                sub.disabled = false;
+                CATEGORY_TREE[main].forEach(s => sub.add(new Option(s, s)));
+            } else sub.disabled = true;
         }
 
         function updateModalSubCategories() {
             const main = document.getElementById('modalMainCategory').value;
-            const subSelect = document.getElementById('modalSubCategory');
-            subSelect.innerHTML = '';
-            CATEGORY_TREE[main].forEach(sub => {
-                const opt = document.createElement('option');
-                opt.value = sub;
-                opt.innerText = sub;
-                subSelect.appendChild(opt);
-            });
+            const sub = document.getElementById('modalSubCategory');
+            sub.innerHTML = '';
+            CATEGORY_TREE[main].forEach(s => sub.add(new Option(s, s)));
         }
 
-        // ============================================
-        // Modal 操作
-        // ============================================
-        function openModal() {
-            document.getElementById('addItemModal').classList.remove('hidden');
-        }
-        function closeModal() {
-            document.getElementById('addItemModal').classList.add('hidden');
-        }
+        function openModal() { document.getElementById('addItemModal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('addItemModal').classList.add('hidden'); }
 
         async function handleFormSubmit(e) {
             e.preventDefault();
-            const content = document.getElementById('itemContent').value;
-            const category = document.getElementById('modalSubCategory').value;
-            const price = parseFloat(document.getElementById('itemPrice').value);
-            const condition = parseInt(document.getElementById('itemCondition').value) || 100;
-
             const newRecord = {
-                id: Date.now() + "_" + Math.random().toString(36).slice(2,6),
+                id: Date.now()+"_"+Math.random().toString(36).slice(2,6),
                 createdAt: new Date().toISOString(),
-                content: content,
-                category: category,
-                price: price,
+                content: document.getElementById('itemContent').value,
+                category: document.getElementById('modalSubCategory').value,
+                price: parseFloat(document.getElementById('itemPrice').value),
                 status: "active",
                 likes: 0,
-                condition: condition
+                condition: parseInt(document.getElementById('itemCondition').value)||100
             };
-
             await saveData(newRecord);
             closeModal();
             e.target.reset();
             document.getElementById('itemCondition').value = 100;
         }
 
-        // ============================================
-        // AI 摘要
-        // ============================================
-        async function askAI(userPrompt) {
-            const res = await fetch(APPS_SCRIPT_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({ action: "askAI", prompt: userPrompt })
-            });
-            const data = await res.json();
-            return data.result || data.error || "AI 冇回應";
-        }
-
         async function handleAISummary() {
-            const btn = document.getElementById('aiBtn');
-            const text = document.getElementById('aiBtnText');
-            btn.disabled = true;
-            text.textContent = '思考中...';
+            const btn = document.getElementById('aiBtn'), txt = document.getElementById('aiBtnText');
+            btn.disabled = true; txt.textContent = '思考中...';
             try {
                 const records = await loadData();
-                if (records.length === 0) { alert('未有轉賣資料可以摘要'); return; }
-                const summaryInput = records.slice(0, 30).map(r => `[${r.category}] ${r.content} (全新度 ${r.condition != null ? r.condition : 100}%)`).join('\n');
-                const prompt = '以下是班級轉賣牆嘅留言。請用繁體中文，用 3-5 句概括同學最關心嘅問題、情緒同有冇明顯 patterns:\n\n' + summaryInput;
-                const result = await askAI(prompt);
-                alert(result);
-            } catch (e) {
-                alert('AI 出錯：' + e.message);
-            } finally {
-                btn.disabled = false;
-                text.textContent = 'AI 摘要';
-            }
+                if (!records.length) { alert('未有轉賣資料'); return; }
+                const input = records.slice(0,30).map(r => `[${r.category}] ${r.content} (全新度 ${r.condition!=null?r.condition:100}%)`).join('\n');
+                const prompt = '以下是班級轉賣牆嘅留言。請用繁體中文，用 3-5 句概括同學最關心嘅問題、情緒同有冇明顯 patterns:\n\n'+input;
+                const res = await fetch(APPS_SCRIPT_URL, { method:"POST", headers:{"Content-Type":"text/plain"}, body: JSON.stringify({ action:"askAI", prompt }) });
+                const data = await res.json();
+                alert(data.result || data.error || "AI 冇回應");
+            } catch(e) { alert('AI 出錯：'+e.message); }
+            finally { btn.disabled = false; txt.textContent = 'AI 摘要'; }
         }
 
-        // ============================================
-        // 首次使用提示
-        // ============================================
-        function showOnboardingIfNeeded() {
-            if (!localStorage.getItem('onboarding_done')) {
-                document.getElementById('onboardingModal').classList.remove('hidden');
-            }
-        }
-        function closeOnboarding() {
-            document.getElementById('onboardingModal').classList.add('hidden');
-            localStorage.setItem('onboarding_done', '1');
-        }
+        function closeOnboarding() { document.getElementById('onboardingModal').classList.add('hidden'); localStorage.setItem('onboarding_done','1'); }
+        function showOnboardingIfNeeded() { if(!localStorage.getItem('onboarding_done')) document.getElementById('onboardingModal').classList.remove('hidden'); }
 
-        // ============================================
-        // 初始化
-        // ============================================
         window.onload = async () => {
             document.getElementById('year').innerText = new Date().getFullYear();
             initCategorySelects();
