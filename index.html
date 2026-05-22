@@ -66,23 +66,20 @@
         <span>✅ 已成功發佈！</span>
     </div>
 
-    <!-- 固定搜尋與排序列 -->
-    <div class="sticky top-16 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 px-4 sm:px-6 lg:px-8 py-3">
-        <div class="max-w-7xl mx-auto flex flex-wrap items-center gap-3">
-            <!-- 搜尋 -->
-            <div class="relative flex-1 min-w-[200px]">
+    <!-- 手機專用 sticky 搜尋列 -->
+    <div class="lg:hidden sticky top-16 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 px-4 py-3">
+        <div class="flex items-center gap-3">
+            <div class="relative flex-1">
                 <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
-                <input type="text" id="searchInput" oninput="renderList()" placeholder="搜索物品..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
+                <input type="text" id="searchInputMobile" oninput="syncSearchInput()" placeholder="搜索物品..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
             </div>
-            <!-- 排序切換 -->
-            <button onclick="toggleSort()" class="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 hover:bg-slate-100 transition-all text-sm">
-                <i data-lucide="refresh-cw" id="sortIcon" class="w-4 h-4 text-slate-400 transition-transform duration-500"></i>
-                <span id="sortLabel" class="text-slate-600 font-medium">價格</span>
+            <button onclick="toggleSort()" class="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 hover:bg-slate-100 transition-all text-sm shrink-0">
+                <i data-lucide="refresh-cw" id="sortIconMobile" class="w-4 h-4 text-slate-400 transition-transform duration-500"></i>
+                <span id="sortLabelMobile" class="text-slate-600 font-medium">價格</span>
             </button>
-            <!-- 更多篩選（手機） -->
-            <button id="toggleFilterBtn" onclick="toggleMoreFilters()" class="lg:hidden flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 hover:bg-slate-100 transition-all text-sm">
+            <button onclick="toggleMoreFilters()" class="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 hover:bg-slate-100 transition-all text-sm shrink-0">
                 <i data-lucide="sliders-horizontal" class="w-4 h-4 text-slate-400"></i>
-                <span class="text-slate-600 font-medium">篩選</span>
+                <span>篩選</span>
             </button>
         </div>
     </div>
@@ -97,23 +94,24 @@
             <button onclick="setStatusFilter('interested')" class="status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-slate-500 hover:text-slate-700" data-status="interested">只看有興趣</button>
         </div>
 
-        <!-- 篩選器（大螢幕一直顯示，手機預設隱藏） -->
-        <div id="extraFilters" class="hidden lg:flex flex-wrap gap-4 mb-6 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-            <!-- Main Category -->
+        <!-- 電腦版 filter bar（不 sticky） -->
+        <div id="desktopFilterBar" class="hidden lg:flex flex-wrap gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6">
+            <div class="relative w-full md:flex-[2] min-w-[200px]">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                <input type="text" id="searchInputDesktop" oninput="syncSearchInput()" placeholder="搜索物品..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
+            </div>
             <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
                 <i data-lucide="filter" class="text-slate-400 w-4 h-4"></i>
                 <select id="mainCategorySelect" onchange="updateSubCategories(); renderList();" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
                     <option value="全部">所有大類別</option>
                 </select>
             </div>
-            <!-- Sub Category -->
             <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
                 <i data-lucide="filter" class="text-slate-400 w-4 h-4"></i>
                 <select id="subCategorySelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none disabled:opacity-50" disabled>
                     <option value="全部">所有細類別</option>
                 </select>
             </div>
-            <!-- Price Range -->
             <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[120px]">
                 <i data-lucide="dollar-sign" class="text-slate-400 w-4 h-4"></i>
                 <select id="priceRangeSelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
@@ -126,10 +124,61 @@
                     <option value="1001-up">> $1000</option>
                 </select>
             </div>
-            <!-- Condition -->
             <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
                 <i data-lucide="star" class="text-slate-400 w-4 h-4"></i>
                 <select id="conditionSelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
+                    <option value="all">全部全新度</option>
+                    <option value="0-20">0 – 20%</option>
+                    <option value="21-40">21 – 40%</option>
+                    <option value="41-60">41 – 60%</option>
+                    <option value="61-80">61 – 80%</option>
+                    <option value="81-100">81 – 100%</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[160px]">
+                <button onclick="toggleSort()" class="flex-1 flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 hover:bg-slate-100 transition-all text-sm group">
+                    <div class="flex items-center gap-2 text-slate-400 group-hover:text-blue-600 truncate">
+                        <i data-lucide="refresh-cw" id="sortIconDesktop" class="w-4 h-4 shrink-0 transition-transform duration-500"></i>
+                        <span id="sortLabelDesktop" class="text-slate-600 font-medium truncate">價格：由低至高</span>
+                    </div>
+                    <div class="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider shrink-0 ml-1">切換</div>
+                </button>
+            </div>
+            <button onclick="openModal()" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 active:scale-95">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+                <span>發佈物件</span>
+            </button>
+        </div>
+
+        <!-- 手機版篩選器（預設隱藏） -->
+        <div id="mobileFilters" class="hidden lg:hidden bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 space-y-4">
+            <div class="flex items-center gap-2">
+                <i data-lucide="filter" class="text-slate-400 w-4 h-4"></i>
+                <select id="mainCategorySelectMobile" onchange="syncMobileFilters(); renderList();" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
+                    <option value="全部">所有大類別</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2">
+                <i data-lucide="filter" class="text-slate-400 w-4 h-4"></i>
+                <select id="subCategorySelectMobile" onchange="syncMobileFilters(); renderList();" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none disabled:opacity-50" disabled>
+                    <option value="全部">所有細類別</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2">
+                <i data-lucide="dollar-sign" class="text-slate-400 w-4 h-4"></i>
+                <select id="priceRangeSelectMobile" onchange="syncMobileFilters(); renderList();" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
+                    <option value="all">全部價錢</option>
+                    <option value="0-200">$0 - $200</option>
+                    <option value="201-400">$201 - $400</option>
+                    <option value="401-600">$401 - $600</option>
+                    <option value="601-800">$601 - $800</option>
+                    <option value="801-1000">$801 - $1000</option>
+                    <option value="1001-up">> $1000</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-2">
+                <i data-lucide="star" class="text-slate-400 w-4 h-4"></i>
+                <select id="conditionSelectMobile" onchange="syncMobileFilters(); renderList();" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
                     <option value="all">全部全新度</option>
                     <option value="0-20">0 – 20%</option>
                     <option value="21-40">21 – 40%</option>
@@ -250,21 +299,9 @@
         let pendingDeleteId = null;
 
         // 全新度輔助
-        function getConditionColor(cond) {
-            if (cond >= 80) return 'bg-green-500';
-            if (cond >= 40) return 'bg-yellow-500';
-            return 'bg-gray-400';
-        }
-        function getConditionLabel(cond) {
-            if (cond >= 80) return '接近全新';
-            if (cond >= 40) return '有使用痕跡';
-            return '較舊';
-        }
-        function getConditionTextColor(cond) {
-            if (cond >= 80) return 'text-green-700';
-            if (cond >= 40) return 'text-yellow-700';
-            return 'text-gray-600';
-        }
+        function getConditionColor(c) { return c>=80 ? 'bg-green-500' : (c>=40 ? 'bg-yellow-500' : 'bg-gray-400'); }
+        function getConditionLabel(c) { return c>=80 ? '接近全新' : (c>=40 ? '有使用痕跡' : '較舊'); }
+        function getConditionTextColor(c) { return c>=80 ? 'text-green-700' : (c>=40 ? 'text-yellow-700' : 'text-gray-600'); }
 
         function normalizeRecord(record) {
             return {
@@ -285,7 +322,7 @@
                 const res = await fetch(APPS_SCRIPT_URL);
                 const data = await res.json();
                 return Array.isArray(data.records) ? data.records.map(normalizeRecord) : null;
-            } catch (e) { console.warn("從 Sheet 讀取失敗", e); return null; }
+            } catch (e) { console.warn(e); return null; }
         }
 
         async function loadData() {
@@ -306,9 +343,7 @@
             if (APPS_SCRIPT_URL.includes("PASTE")) return;
             if (payload.action==="create" && payload.record) payload.record = convertToSheetFormat(payload.record);
             else if (payload.action==="update" && payload.changes) payload.changes = convertToSheetFormat(payload.changes);
-            try {
-                await fetch(APPS_SCRIPT_URL, { method:"POST", headers:{"Content-Type":"text/plain"}, body: JSON.stringify(payload) });
-            } catch(e) { console.warn("同步失敗", e); }
+            try { await fetch(APPS_SCRIPT_URL, { method:"POST", headers:{"Content-Type":"text/plain"}, body: JSON.stringify(payload) }); } catch(e) {}
         }
 
         async function saveData(newRecord) {
@@ -348,37 +383,48 @@
         function closeConfirmDelete() { document.getElementById('confirmDeleteModal').classList.add('hidden'); pendingDeleteId = null; }
         document.getElementById('confirmDeleteBtn').addEventListener('click', async () => { if(pendingDeleteId) { await deleteRecord(pendingDeleteId); closeConfirmDelete(); } });
 
-        // 更多篩選切換
-        function toggleMoreFilters() {
-            const extra = document.getElementById('extraFilters');
-            if (extra.classList.contains('hidden')) {
-                extra.classList.remove('hidden');
-                extra.classList.add('flex'); // 確保顯示
-            } else {
-                extra.classList.add('hidden');
-                extra.classList.remove('flex');
+        // 同步搜尋輸入
+        function syncSearchInput() {
+            const desktopInput = document.getElementById('searchInputDesktop');
+            const mobileInput = document.getElementById('searchInputMobile');
+            if (document.activeElement === desktopInput) {
+                mobileInput.value = desktopInput.value;
+            } else if (document.activeElement === mobileInput) {
+                desktopInput.value = mobileInput.value;
             }
+            renderList();
+        }
+        // 取得目前有效的搜尋值
+        function getSearchQuery() {
+            return (document.getElementById('searchInputDesktop')?.value || document.getElementById('searchInputMobile')?.value || '').toLowerCase();
         }
 
-        // 類別計數（修正：由細類別對應大類別）
+        // 手機版篩選器同步
+        function syncMobileFilters() {
+            document.getElementById('mainCategorySelect').value = document.getElementById('mainCategorySelectMobile').value;
+            document.getElementById('subCategorySelect').value = document.getElementById('subCategorySelectMobile').value;
+            document.getElementById('priceRangeSelect').value = document.getElementById('priceRangeSelectMobile').value;
+            document.getElementById('conditionSelect').value = document.getElementById('conditionSelectMobile').value;
+        }
+
+        function toggleMoreFilters() {
+            const mf = document.getElementById('mobileFilters');
+            mf.classList.toggle('hidden');
+        }
+
         function updateCategoryCounts(records) {
-            const mainSelect = document.getElementById('mainCategorySelect');
+            const select = document.getElementById('mainCategorySelect');
             const countMap = {};
             for (let main in CATEGORY_TREE) countMap[main] = 0;
             records.forEach(item => {
                 const sub = item.category;
                 for (let main in CATEGORY_TREE) {
-                    if (CATEGORY_TREE[main].includes(sub)) {
-                        countMap[main]++;
-                        break;
-                    }
+                    if (CATEGORY_TREE[main].includes(sub)) { countMap[main]++; break; }
                 }
             });
-            const options = mainSelect.querySelectorAll('option');
+            const options = select.querySelectorAll('option');
             options.forEach(opt => {
-                if (opt.value !== '全部') {
-                    opt.textContent = `${opt.value} (${countMap[opt.value] || 0})`;
-                }
+                if (opt.value !== '全部') opt.textContent = `${opt.value} (${countMap[opt.value] || 0})`;
             });
         }
 
@@ -386,7 +432,7 @@
             const records = recordsOverride || await loadData();
             const grid = document.getElementById('itemGrid');
             const empty = document.getElementById('emptyState');
-            const search = document.getElementById('searchInput').value.toLowerCase();
+            const search = getSearchQuery();
             const mainCat = document.getElementById('mainCategorySelect').value;
             const subCat = document.getElementById('subCategorySelect').value;
             const priceRange = document.getElementById('priceRangeSelect').value;
@@ -502,18 +548,24 @@
 
         async function toggleSort() {
             currentSortBy = currentSortBy==='price-asc'?'price-desc':'price-asc';
-            document.getElementById('sortLabel').innerText = currentSortBy==='price-asc'?'由低至高':'由高至低';
-            document.getElementById('sortIcon').style.transform = currentSortBy==='price-desc'?'rotate(180deg)':'rotate(0deg)';
+            const label = currentSortBy==='price-asc'?'由低至高':'由高至低';
+            document.getElementById('sortLabelDesktop').innerText = '價格：'+label;
+            document.getElementById('sortLabelMobile').innerText = label;
+            document.getElementById('sortIconDesktop').style.transform = currentSortBy==='price-desc'?'rotate(180deg)':'';
+            document.getElementById('sortIconMobile').style.transform = currentSortBy==='price-desc'?'rotate(180deg)':'';
             await renderList();
         }
 
         function initCategorySelects() {
             const main = document.getElementById('mainCategorySelect');
-            const modal = document.getElementById('modalMainCategory');
+            const mainMobile = document.getElementById('mainCategorySelectMobile');
             main.innerHTML = '<option value="全部">所有大類別</option>';
+            mainMobile.innerHTML = '<option value="全部">所有大類別</option>';
+            const modal = document.getElementById('modalMainCategory');
             modal.innerHTML = '';
             Object.keys(CATEGORY_TREE).forEach(cat => {
                 main.add(new Option(cat, cat));
+                mainMobile.add(new Option(cat, cat));
                 modal.add(new Option(cat, cat));
             });
             updateModalSubCategories();
@@ -522,11 +574,17 @@
         function updateSubCategories() {
             const main = document.getElementById('mainCategorySelect').value;
             const sub = document.getElementById('subCategorySelect');
+            const subMobile = document.getElementById('subCategorySelectMobile');
             sub.innerHTML = '<option value="全部">所有細類別</option>';
+            subMobile.innerHTML = '<option value="全部">所有細類別</option>';
             if (main!=='全部') {
                 sub.disabled = false;
-                CATEGORY_TREE[main].forEach(s => sub.add(new Option(s, s)));
-            } else sub.disabled = true;
+                subMobile.disabled = false;
+                CATEGORY_TREE[main].forEach(s => { sub.add(new Option(s,s)); subMobile.add(new Option(s,s)); });
+            } else {
+                sub.disabled = true;
+                subMobile.disabled = true;
+            }
         }
 
         function updateModalSubCategories() {
