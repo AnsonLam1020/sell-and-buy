@@ -312,7 +312,6 @@
         let pendingDeleteId = null;
         let currentCurrency = 'HKD';
 
-        // 全新度輔助
         function getConditionColor(c) { return c>=80 ? 'bg-green-500' : (c>=40 ? 'bg-yellow-500' : 'bg-gray-400'); }
         function getConditionLabel(c) { return c>=80 ? '接近全新' : (c>=40 ? '有使用痕跡' : '較舊'); }
         function getConditionTextColor(c) { return c>=80 ? 'text-green-700' : (c>=40 ? 'text-yellow-700' : 'text-gray-600'); }
@@ -397,7 +396,6 @@
         function closeConfirmDelete() { document.getElementById('confirmDeleteModal').classList.add('hidden'); pendingDeleteId = null; }
         document.getElementById('confirmDeleteBtn').addEventListener('click', async () => { if(pendingDeleteId) { await deleteRecord(pendingDeleteId); closeConfirmDelete(); } });
 
-        // 貨幣功能
         function formatPrice(hkdPrice, currency) {
             const rate = CURRENCIES[currency]?.rate || 1;
             const symbol = CURRENCIES[currency]?.symbol || 'HK$';
@@ -429,7 +427,6 @@
             mobileSelect.innerHTML = optionsHtml;
         }
 
-        // 更新模態框中的價格換算顯示
         function updatePriceConversion() {
             const priceInput = document.getElementById('itemPrice');
             const conversionDiv = document.getElementById('priceConversion');
@@ -443,7 +440,6 @@
             conversionDiv.classList.remove('hidden');
         }
 
-        // 當貨幣改變時，如果模態框打開，也更新換算
         function refreshPriceConversionIfOpen() {
             if (!document.getElementById('addItemModal').classList.contains('hidden')) {
                 updatePriceConversion();
@@ -476,7 +472,6 @@
             updatePriceRangeOptions();
         }
 
-        // 同步搜尋輸入
         function syncSearchInput() {
             const desktopInput = document.getElementById('searchInputDesktop');
             const mobileInput = document.getElementById('searchInputMobile');
@@ -491,7 +486,6 @@
             return (document.getElementById('searchInputDesktop')?.value || document.getElementById('searchInputMobile')?.value || '').toLowerCase();
         }
 
-        // 手機版篩選器同步
         function syncMobileFilters() {
             document.getElementById('mainCategorySelect').value = document.getElementById('mainCategorySelectMobile').value;
             document.getElementById('subCategorySelect').value = document.getElementById('subCategorySelectMobile').value;
@@ -690,7 +684,7 @@
 
         function openModal() {
             document.getElementById('addItemModal').classList.remove('hidden');
-            updatePriceConversion(); // 打開時立即更新換算
+            updatePriceConversion();
         }
         function closeModal() {
             document.getElementById('addItemModal').classList.add('hidden');
@@ -712,7 +706,6 @@
             closeModal();
             e.target.reset();
             document.getElementById('itemCondition').value = 100;
-            // 隱藏換算提示
             document.getElementById('priceConversion').classList.add('hidden');
         }
 
@@ -722,8 +715,11 @@
             try {
                 const records = await loadData();
                 if (!records.length) { alert('未有轉賣資料'); return; }
-                const input = records.slice(0,30).map(r => `[${r.category}] ${r.content} (全新度 ${r.condition!=null?r.condition:100}%)`).join('\n');
-                const prompt = '以下是班級轉賣牆嘅留言。請用繁體中文，用 3-5 句概括同學最關心嘅問題、情緒同有冇明顯 patterns:\n\n'+input;
+                const summaryInput = records.slice(0,30).map(r =>
+                    `[${r.category}] ${r.content} (全新度 ${r.condition!=null?r.condition:100}%)`
+                ).join('\n');
+                const currencyName = currentCurrency;
+                const prompt = '目前顯示貨幣為 ' + currencyName + '。以下是班級轉賣牆嘅留言。請用繁體中文，用 3-5 句概括轉賣嘅內容主要包括什麼物品，不需要提及情緒或模式：\n\n' + summaryInput;
                 const res = await fetch(APPS_SCRIPT_URL, { method:"POST", headers:{"Content-Type":"text/plain"}, body: JSON.stringify({ action:"askAI", prompt }) });
                 const data = await res.json();
                 alert(data.result || data.error || "AI 冇回應");
@@ -731,7 +727,6 @@
             finally { btn.disabled = false; txt.textContent = 'AI 摘要'; }
         }
 
-        // 初始化：检查货币偏好，若无则弹窗
         async function initializeApp() {
             document.getElementById('year').innerText = new Date().getFullYear();
             initCategorySelects();
