@@ -48,6 +48,10 @@
                 <h1 class="text-xl font-bold tracking-tight text-slate-800">培正回收箱</h1>
             </div>
             <div class="flex items-center gap-3">
+                <button onclick="openCurrencyModal()" class="flex items-center gap-2 bg-zinc-800 text-zinc-100 px-4 py-2 rounded-full font-medium hover:bg-zinc-700 transition-colors active:scale-95 border border-zinc-700">
+                    <i data-lucide="globe" class="w-4 h-4"></i>
+                    <span>改變貨幣</span>
+                </button>
                 <button onclick="handleAISummary()" id="aiBtn" class="flex items-center gap-2 bg-zinc-800 text-zinc-100 px-4 py-2 rounded-full font-medium hover:bg-zinc-700 transition-colors active:scale-95 border border-zinc-700 disabled:opacity-50">
                     <i data-lucide="sparkles" class="w-4 h-4"></i>
                     <span id="aiBtnText">AI 摘要</span>
@@ -66,7 +70,7 @@
         <span>✅ 已成功發佈！</span>
     </div>
 
-    <!-- 手機專用 sticky 搜尋列 -->
+    <!-- 手机专用 sticky 搜寻列 -->
     <div class="lg:hidden sticky top-16 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 px-4 py-3">
         <div class="flex items-center gap-3">
             <div class="relative flex-1">
@@ -94,7 +98,7 @@
             <button onclick="setStatusFilter('interested')" class="status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-slate-500 hover:text-slate-700" data-status="interested">只看有興趣</button>
         </div>
 
-        <!-- 電腦版 filter bar（不 sticky） -->
+        <!-- 桌面版 filter bar -->
         <div id="desktopFilterBar" class="hidden lg:flex flex-wrap gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6">
             <div class="relative w-full md:flex-[2] min-w-[200px]">
                 <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
@@ -115,13 +119,7 @@
             <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[120px]">
                 <i data-lucide="dollar-sign" class="text-slate-400 w-4 h-4"></i>
                 <select id="priceRangeSelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
-                    <option value="all">全部價錢</option>
-                    <option value="0-200">$0 - $200</option>
-                    <option value="201-400">$201 - $400</option>
-                    <option value="401-600">$401 - $600</option>
-                    <option value="601-800">$601 - $800</option>
-                    <option value="801-1000">$801 - $1000</option>
-                    <option value="1001-up">> $1000</option>
+                    <!-- 动态生成 -->
                 </select>
             </div>
             <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
@@ -150,7 +148,7 @@
             </button>
         </div>
 
-        <!-- 手機版篩選器（預設隱藏） -->
+        <!-- 手机版篩選器 -->
         <div id="mobileFilters" class="hidden lg:hidden bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 space-y-4">
             <div class="flex items-center gap-2">
                 <i data-lucide="filter" class="text-slate-400 w-4 h-4"></i>
@@ -167,13 +165,7 @@
             <div class="flex items-center gap-2">
                 <i data-lucide="dollar-sign" class="text-slate-400 w-4 h-4"></i>
                 <select id="priceRangeSelectMobile" onchange="syncMobileFilters(); renderList();" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
-                    <option value="all">全部價錢</option>
-                    <option value="0-200">$0 - $200</option>
-                    <option value="201-400">$201 - $400</option>
-                    <option value="401-600">$401 - $600</option>
-                    <option value="601-800">$601 - $800</option>
-                    <option value="801-1000">$801 - $1000</option>
-                    <option value="1001-up">> $1000</option>
+                    <!-- 动态生成 -->
                 </select>
             </div>
             <div class="flex items-center gap-2">
@@ -237,7 +229,8 @@
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">價錢 (HKD)</label>
-                    <input type="number" id="itemPrice" required placeholder="0" min="0" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+                    <input type="number" id="itemPrice" required placeholder="0" min="0" oninput="updatePriceConversion()" class="w-full px-4 py-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+                    <div id="priceConversion" class="mt-2 text-sm text-slate-500 font-medium hidden"></div>
                 </div>
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">全新度 (0–100)</label>
@@ -264,18 +257,19 @@
         </div>
     </div>
 
-    <!-- 首次使用提示 Modal -->
-    <div id="onboardingModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <!-- 货币选择模态框 -->
+    <div id="currencyModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
-        <div class="relative bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
-            <h2 class="text-2xl font-black text-slate-800 mb-4">歡迎使用培正回收箱！</h2>
-            <ul class="space-y-3 text-slate-700 text-sm leading-relaxed">
-                <li>❤️ <b>心心</b>：點一下表示有興趣，再點一下取消。心心只會出現在未賣出嘅物品上。</li>
-                <li>🔍 <b>篩選功能</b>：你可以用上方嘅類別、價錢、全新度篩選器，快速搵到心水物品。</li>
-                <li>📱 手機版可以點「更多篩選」展開其他條件。</li>
-                <li>✨ 全新度會用<b>進度條</b>同<b>顏色標籤</b>顯示，綠色＝接近全新，黃色＝有使用痕跡，灰色＝較舊。</li>
-            </ul>
-            <button onclick="closeOnboarding()" class="mt-6 w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors">開始使用</button>
+        <div class="relative bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl">
+            <h2 class="text-xl font-black text-slate-800 mb-6 text-center">選擇顯示貨幣</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="setCurrency('HKD')" class="currency-option p-4 rounded-xl border-2 border-slate-200 hover:border-blue-500 transition-colors font-bold text-lg">🇭🇰 HKD</button>
+                <button onclick="setCurrency('USD')" class="currency-option p-4 rounded-xl border-2 border-slate-200 hover:border-blue-500 transition-colors font-bold text-lg">🇺🇸 USD</button>
+                <button onclick="setCurrency('CNY')" class="currency-option p-4 rounded-xl border-2 border-slate-200 hover:border-blue-500 transition-colors font-bold text-lg">🇨🇳 CNY</button>
+                <button onclick="setCurrency('EUR')" class="currency-option p-4 rounded-xl border-2 border-slate-200 hover:border-blue-500 transition-colors font-bold text-lg">🇪🇺 EUR</button>
+                <button onclick="setCurrency('JPY')" class="currency-option p-4 rounded-xl border-2 border-slate-200 hover:border-blue-500 transition-colors font-bold text-lg">🇯🇵 JPY</button>
+                <button onclick="setCurrency('GBP')" class="currency-option p-4 rounded-xl border-2 border-slate-200 hover:border-blue-500 transition-colors font-bold text-lg">🇬🇧 GBP</button>
+            </div>
         </div>
     </div>
 
@@ -294,9 +288,29 @@
             "男裝": "shirt", "女裝": "shirt", "童裝": "baby",
             "廚具": "utensils", "家具": "sofa", "裝飾品": "flower", "其他": "more-horizontal"
         };
+        
+        const CURRENCIES = {
+            HKD: { rate: 1, symbol: 'HK$' },
+            USD: { rate: 0.128, symbol: 'US$' },
+            CNY: { rate: 1.16, symbol: '¥' },
+            EUR: { rate: 0.12, symbol: '€' },
+            JPY: { rate: 16.5, symbol: '¥' },
+            GBP: { rate: 0.10, symbol: '£' }
+        };
+        const HKD_PRICE_RANGES = [
+            { value: 'all', label: '全部價錢' },
+            { value: '0-200', label: '0 – 200' },
+            { value: '201-400', label: '201 – 400' },
+            { value: '401-600', label: '401 – 600' },
+            { value: '601-800', label: '601 – 800' },
+            { value: '801-1000', label: '801 – 1000' },
+            { value: '1001-up', label: '> 1000' }
+        ];
+
         let currentStatusFilter = 'all';
         let currentSortBy = 'price-asc';
         let pendingDeleteId = null;
+        let currentCurrency = 'HKD';
 
         // 全新度輔助
         function getConditionColor(c) { return c>=80 ? 'bg-green-500' : (c>=40 ? 'bg-yellow-500' : 'bg-gray-400'); }
@@ -383,6 +397,85 @@
         function closeConfirmDelete() { document.getElementById('confirmDeleteModal').classList.add('hidden'); pendingDeleteId = null; }
         document.getElementById('confirmDeleteBtn').addEventListener('click', async () => { if(pendingDeleteId) { await deleteRecord(pendingDeleteId); closeConfirmDelete(); } });
 
+        // 貨幣功能
+        function formatPrice(hkdPrice, currency) {
+            const rate = CURRENCIES[currency]?.rate || 1;
+            const symbol = CURRENCIES[currency]?.symbol || 'HK$';
+            const converted = hkdPrice * rate;
+            const decimals = (currency === 'JPY') ? 0 : 2;
+            return symbol + ' ' + converted.toFixed(decimals);
+        }
+
+        function updatePriceRangeOptions() {
+            const currency = currentCurrency;
+            const rate = CURRENCIES[currency]?.rate || 1;
+            const symbol = CURRENCIES[currency]?.symbol || 'HK$';
+            const desktopSelect = document.getElementById('priceRangeSelect');
+            const mobileSelect = document.getElementById('priceRangeSelectMobile');
+            
+            const optionsHtml = HKD_PRICE_RANGES.map(range => {
+                if (range.value === 'all') return `<option value="all">全部價錢</option>`;
+                if (range.value === '1001-up') {
+                    const upVal = (1001 * rate).toFixed(0);
+                    return `<option value="1001-up">> ${symbol} ${upVal}</option>`;
+                }
+                const [minHKD, maxHKD] = range.value.split('-').map(Number);
+                const minForeign = (minHKD * rate).toFixed(0);
+                const maxForeign = (maxHKD * rate).toFixed(0);
+                return `<option value="${range.value}">${symbol} ${minForeign} – ${symbol} ${maxForeign}</option>`;
+            }).join('');
+            
+            desktopSelect.innerHTML = optionsHtml;
+            mobileSelect.innerHTML = optionsHtml;
+        }
+
+        // 更新模態框中的價格換算顯示
+        function updatePriceConversion() {
+            const priceInput = document.getElementById('itemPrice');
+            const conversionDiv = document.getElementById('priceConversion');
+            const hkdPrice = parseFloat(priceInput.value);
+            if (isNaN(hkdPrice) || currentCurrency === 'HKD') {
+                conversionDiv.classList.add('hidden');
+                return;
+            }
+            const converted = formatPrice(hkdPrice, currentCurrency);
+            conversionDiv.textContent = `≈ ${converted}`;
+            conversionDiv.classList.remove('hidden');
+        }
+
+        // 當貨幣改變時，如果模態框打開，也更新換算
+        function refreshPriceConversionIfOpen() {
+            if (!document.getElementById('addItemModal').classList.contains('hidden')) {
+                updatePriceConversion();
+            }
+        }
+
+        function setCurrency(currency) {
+            currentCurrency = currency;
+            localStorage.setItem('currency_preference', currentCurrency);
+            updatePriceRangeOptions();
+            closeCurrencyModal();
+            refreshPriceConversionIfOpen();
+            renderList();
+        }
+
+        function openCurrencyModal() {
+            document.getElementById('currencyModal').classList.remove('hidden');
+        }
+        function closeCurrencyModal() {
+            document.getElementById('currencyModal').classList.add('hidden');
+        }
+
+        function loadCurrencyPreference() {
+            const saved = localStorage.getItem('currency_preference');
+            if (saved && CURRENCIES[saved]) {
+                currentCurrency = saved;
+            } else {
+                currentCurrency = 'HKD';
+            }
+            updatePriceRangeOptions();
+        }
+
         // 同步搜尋輸入
         function syncSearchInput() {
             const desktopInput = document.getElementById('searchInputDesktop');
@@ -394,7 +487,6 @@
             }
             renderList();
         }
-        // 取得目前有效的搜尋值
         function getSearchQuery() {
             return (document.getElementById('searchInputDesktop')?.value || document.getElementById('searchInputMobile')?.value || '').toLowerCase();
         }
@@ -437,6 +529,7 @@
             const subCat = document.getElementById('subCategorySelect').value;
             const priceRange = document.getElementById('priceRangeSelect').value;
             const condRange = document.getElementById('conditionSelect').value;
+            const currency = currentCurrency;
 
             const filtered = records.filter(item => {
                 const c = (item.content||'').toLowerCase();
@@ -451,10 +544,10 @@
                 if (currentStatusFilter==='interested' && (item.likes<=0 || item.status==='done')) return false;
                 if (priceRange !== 'all') {
                     const p = item.price||0;
-                    if (priceRange==='1001-up') { if (p<=1000) return false; }
+                    if (priceRange === '1001-up') { if (p <= 1000) return false; }
                     else {
-                        const [min,max] = priceRange.split('-').map(Number);
-                        if (p<min || p>max) return false;
+                        const [min, max] = priceRange.split('-').map(Number);
+                        if (p < min || p > max) return false;
                     }
                 }
                 if (condRange !== 'all') {
@@ -483,6 +576,7 @@
                     const cond = item.condition!=null ? item.condition : 100;
                     const card = document.createElement('div');
                     card.className = `rounded-2xl p-5 border shadow-sm hover:shadow-md transition-all group ${liked?'ring-2 ring-red-500 border-red-500 bg-red-50/10': (sold?'bg-green-50/80 border-green-100 opacity-90':'bg-white border-slate-100')}`;
+                    const priceDisplay = formatPrice(item.price || 0, currency);
                     card.innerHTML = `
                         <div class="flex justify-between items-start mb-4">
                             <div class="bg-slate-50 p-3 rounded-xl"><i data-lucide="${CATEGORY_ICONS[item.category]||'package'}" class="w-6 h-6 text-slate-400"></i></div>
@@ -495,7 +589,7 @@
                             </div>
                         </div>
                         <h3 class="text-lg font-bold text-slate-800 mb-1 truncate">${item.content}</h3>
-                        <div class="text-2xl font-black text-blue-600 mb-1">$${item.price||0}</div>
+                        <div class="text-2xl font-black text-blue-600 mb-1">${priceDisplay}</div>
                         <div class="mb-4">
                             <div class="flex items-center justify-between text-xs mb-1">
                                 <span class="font-bold ${getConditionTextColor(cond)}">${getConditionLabel(cond)}</span>
@@ -594,8 +688,13 @@
             CATEGORY_TREE[main].forEach(s => sub.add(new Option(s, s)));
         }
 
-        function openModal() { document.getElementById('addItemModal').classList.remove('hidden'); }
-        function closeModal() { document.getElementById('addItemModal').classList.add('hidden'); }
+        function openModal() {
+            document.getElementById('addItemModal').classList.remove('hidden');
+            updatePriceConversion(); // 打開時立即更新換算
+        }
+        function closeModal() {
+            document.getElementById('addItemModal').classList.add('hidden');
+        }
 
         async function handleFormSubmit(e) {
             e.preventDefault();
@@ -613,6 +712,8 @@
             closeModal();
             e.target.reset();
             document.getElementById('itemCondition').value = 100;
+            // 隱藏換算提示
+            document.getElementById('priceConversion').classList.add('hidden');
         }
 
         async function handleAISummary() {
@@ -630,16 +731,20 @@
             finally { btn.disabled = false; txt.textContent = 'AI 摘要'; }
         }
 
-        function closeOnboarding() { document.getElementById('onboardingModal').classList.add('hidden'); localStorage.setItem('onboarding_done','1'); }
-        function showOnboardingIfNeeded() { if(!localStorage.getItem('onboarding_done')) document.getElementById('onboardingModal').classList.remove('hidden'); }
-
-        window.onload = async () => {
+        // 初始化：检查货币偏好，若无则弹窗
+        async function initializeApp() {
             document.getElementById('year').innerText = new Date().getFullYear();
             initCategorySelects();
-            await renderList();
+            loadCurrencyPreference();
+            if (!localStorage.getItem('currency_preference')) {
+                openCurrencyModal();
+            } else {
+                await renderList();
+            }
             lucide.createIcons();
-            showOnboardingIfNeeded();
-        };
+        }
+
+        window.onload = initializeApp;
     </script>
 </body>
 </html>
