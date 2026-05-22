@@ -10,6 +10,32 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        
+        /* 心心動畫 */
+        @keyframes heartBeat {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.3); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+        .heart-beat {
+            animation: heartBeat 0.4s ease-in-out;
+        }
+        
+        /* Toast 提示 */
+        .toast {
+            position: fixed;
+            top: 5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .toast-hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-50%) translateY(-10px);
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
@@ -36,6 +62,12 @@
         </div>
     </header>
 
+    <!-- Toast 提示 -->
+    <div id="successToast" class="toast toast-hidden bg-green-500 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 font-bold">
+        <i data-lucide="check-circle" class="w-5 h-5"></i>
+        <span>✅ 已成功發佈！</span>
+    </div>
+
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
         
         <!-- Status Filter Tabs -->
@@ -46,59 +78,16 @@
             <button onclick="setStatusFilter('interested')" class="status-btn px-6 py-2 rounded-xl text-sm font-bold transition-all text-slate-500 hover:text-slate-700" data-status="interested">只看有興趣</button>
         </div>
 
-        <!-- Filter Bar -->
-        <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-8">
-            <div class="flex flex-wrap gap-4">
-                <!-- Search -->
+        <!-- Filter Bar (sticky) -->
+        <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-8 sticky top-20 z-30">
+            <div class="flex flex-wrap gap-4 items-center">
+                <!-- 搜尋（永遠顯示） -->
                 <div class="relative w-full md:flex-[2] min-w-[200px]">
                     <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
                     <input type="text" id="searchInput" oninput="renderList()" placeholder="搜索物品..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
                 </div>
                 
-                <!-- Main Category -->
-                <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
-                    <i data-lucide="filter" class="text-slate-400 w-4 h-4"></i>
-                    <select id="mainCategorySelect" onchange="updateSubCategories(); renderList();" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
-                        <option value="全部">所有大類別</option>
-                    </select>
-                </div>
-
-                <!-- Sub Category -->
-                <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
-                    <i data-lucide="filter" class="text-slate-400 w-4 h-4"></i>
-                    <select id="subCategorySelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none disabled:opacity-50" disabled>
-                        <option value="全部">所有細類別</option>
-                    </select>
-                </div>
-
-                <!-- Price Range -->
-                <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[120px]">
-                    <i data-lucide="dollar-sign" class="text-slate-400 w-4 h-4"></i>
-                    <select id="priceRangeSelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
-                        <option value="all">全部價錢</option>
-                        <option value="0-200">$0 - $200</option>
-                        <option value="201-400">$201 - $400</option>
-                        <option value="401-600">$401 - $600</option>
-                        <option value="601-800">$601 - $800</option>
-                        <option value="801-1000">$801 - $1000</option>
-                        <option value="1001-up">> $1000</option>
-                    </select>
-                </div>
-
-                <!-- 全新度篩選 -->
-                <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
-                    <i data-lucide="star" class="text-slate-400 w-4 h-4"></i>
-                    <select id="conditionSelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
-                        <option value="all">全部全新度</option>
-                        <option value="0-20">0 – 20%</option>
-                        <option value="21-40">21 – 40%</option>
-                        <option value="41-60">41 – 60%</option>
-                        <option value="61-80">61 – 80%</option>
-                        <option value="81-100">81 – 100%</option>
-                    </select>
-                </div>
-
-                <!-- Sort Toggle -->
+                <!-- 排序（永遠顯示） -->
                 <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[160px]">
                     <button onclick="toggleSort()" class="flex-1 flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl py-2 px-3 hover:bg-slate-100 transition-all text-sm group">
                         <div class="flex items-center gap-2 text-slate-400 group-hover:text-blue-600 truncate">
@@ -109,6 +98,58 @@
                     </button>
                 </div>
 
+                <!-- 更多篩選按鈕（手機可見） -->
+                <button id="toggleFilterBtn" onclick="toggleMoreFilters()" class="lg:hidden w-full mt-2 bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors">
+                    <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                    <span>更多篩選</span>
+                </button>
+
+                <!-- 可收摺的篩選區塊 -->
+                <div id="extraFilters" class="hidden lg:flex flex-wrap gap-4 w-full lg:w-auto">
+                    <!-- Main Category -->
+                    <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
+                        <i data-lucide="filter" class="text-slate-400 w-4 h-4"></i>
+                        <select id="mainCategorySelect" onchange="updateSubCategories(); renderList();" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
+                            <option value="全部">所有大類別</option>
+                        </select>
+                    </div>
+
+                    <!-- Sub Category -->
+                    <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
+                        <i data-lucide="filter" class="text-slate-400 w-4 h-4"></i>
+                        <select id="subCategorySelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none disabled:opacity-50" disabled>
+                            <option value="全部">所有細類別</option>
+                        </select>
+                    </div>
+
+                    <!-- Price Range -->
+                    <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[120px]">
+                        <i data-lucide="dollar-sign" class="text-slate-400 w-4 h-4"></i>
+                        <select id="priceRangeSelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
+                            <option value="all">全部價錢</option>
+                            <option value="0-200">$0 - $200</option>
+                            <option value="201-400">$201 - $400</option>
+                            <option value="401-600">$401 - $600</option>
+                            <option value="601-800">$601 - $800</option>
+                            <option value="801-1000">$801 - $1000</option>
+                            <option value="1001-up">> $1000</option>
+                        </select>
+                    </div>
+
+                    <!-- 全新度篩選 -->
+                    <div class="flex items-center gap-2 w-full sm:w-[calc(50%-8px)] md:flex-1 min-w-[140px]">
+                        <i data-lucide="star" class="text-slate-400 w-4 h-4"></i>
+                        <select id="conditionSelect" onchange="renderList()" class="flex-1 bg-slate-50 border-none rounded-xl py-2 px-3 focus:ring-2 focus:ring-blue-500 transition-all text-sm outline-none">
+                            <option value="all">全部全新度</option>
+                            <option value="0-20">0 – 20%</option>
+                            <option value="21-40">21 – 40%</option>
+                            <option value="41-60">41 – 60%</option>
+                            <option value="61-80">61 – 80%</option>
+                            <option value="81-100">81 – 100%</option>
+                        </select>
+                    </div>
+                </div>
+
                 <button onclick="openModal()" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 active:scale-95">
                     <i data-lucide="plus" class="w-5 h-5"></i>
                     <span>發佈物件</span>
@@ -116,7 +157,7 @@
             </div>
         </section>
 
-        <!-- Helper Note -->
+        <!-- Helper Note (只在首訪時彈出 tooltip，此處保留原句作為靜態提醒) -->
         <div class="mb-8 flex items-center gap-2 px-4 py-3 bg-red-50/30 border border-red-100/50 rounded-2xl">
             <span class="text-red-600 font-black text-xl leading-none">！</span>
             <p class="text-slate-600 text-sm font-bold">有沒有興趣只會出現在尚未賣出的貨品</p>
@@ -184,9 +225,37 @@
         </div>
     </div>
 
+    <!-- 刪除確認 Modal -->
+    <div id="confirmDeleteModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div onclick="closeConfirmDelete()" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+        <div class="relative bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+            <h3 class="text-lg font-bold text-slate-800 mb-2">確定要刪除？</h3>
+            <p id="confirmDeleteMsg" class="text-slate-600 mb-4"></p>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeConfirmDelete()" class="px-4 py-2 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">取消</button>
+                <button id="confirmDeleteBtn" class="px-4 py-2 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors">刪除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 首次使用提示 Modal -->
+    <div id="onboardingModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+        <div class="relative bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
+            <h2 class="text-2xl font-black text-slate-800 mb-4">歡迎使用培正回收箱！</h2>
+            <ul class="space-y-3 text-slate-700 text-sm leading-relaxed">
+                <li>❤️ <b>心心</b>：點一下表示有興趣，再點一下取消。心心只會出現在未賣出嘅物品上。</li>
+                <li>🔍 <b>篩選功能</b>：你可以用上方嘅類別、價錢、全新度篩選器，快速搵到心水物品。</li>
+                <li>📱 手機版可以點「更多篩選」展開其他條件。</li>
+                <li>✨ 全新度會用<b>進度條</b>同<b>顏色標籤</b>顯示，綠色＝接近全新，黃色＝有使用痕跡，灰色＝較舊。</li>
+            </ul>
+            <button onclick="closeOnboarding()" class="mt-6 w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors">開始使用</button>
+        </div>
+    </div>
+
     <script>
         // ============================================
-        // 培正回收箱 - Frontend JavaScript（喜歡切換 + 全新度修復）
+        // 培正回收箱 - Frontend JavaScript（UX 升級版）
         // ============================================
         
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAolZlRu_FkosrdUAr3q3450xey6g8tYcIrOt5dbcwbZbL-97006olyuj6qm2x3jD2Sg/exec";
@@ -208,8 +277,30 @@
 
         let currentStatusFilter = 'all';
         let currentSortBy = 'price-asc';
+        let pendingDeleteId = null; // 暫存待刪除 ID
 
-        // 1. 欄位標準化 (全新度嚴格檢查)
+        // ============================================
+        // 全新度輔助函數
+        // ============================================
+        function getConditionColor(cond) {
+            if (cond >= 80) return 'bg-green-500';
+            if (cond >= 40) return 'bg-yellow-500';
+            return 'bg-gray-400';
+        }
+        function getConditionLabel(cond) {
+            if (cond >= 80) return '接近全新';
+            if (cond >= 40) return '有使用痕跡';
+            return '較舊';
+        }
+        function getConditionTextColor(cond) {
+            if (cond >= 80) return 'text-green-700';
+            if (cond >= 40) return 'text-yellow-700';
+            return 'text-gray-600';
+        }
+
+        // ============================================
+        // 欄位標準化
+        // ============================================
         function normalizeRecord(record) {
             return {
                 id: String(record.id || record.ID || ""),
@@ -219,12 +310,13 @@
                 price: Number(record.price !== undefined ? record.price : (record.Price != null ? record.Price : 0)),
                 likes: Number(record.likes !== undefined ? record.likes : (record.Likes != null ? record.Likes : 0)),
                 status: String(record.status || record.Status || "active"),
-                // 僅在 Condition 為 null/undefined 時預設 100，保留 0
                 condition: record.condition !== undefined ? Number(record.condition) : (record.Condition != null ? Number(record.Condition) : 100)
             };
         }
 
-        // 2. 用 GET 從 Sheet 讀取
+        // ============================================
+        // 從 Sheet 讀取
+        // ============================================
         async function fetchRecordsFromSheet() {
             if (APPS_SCRIPT_URL.includes("PASTE")) return null;
             try {
@@ -237,7 +329,6 @@
             }
         }
 
-        // 3. 主要資料載入 (Sheet 優先，localStorage 降級)
         async function loadData() {
             const remote = await fetchRecordsFromSheet();
             if (remote) {
@@ -248,17 +339,14 @@
             return data ? JSON.parse(data) : [];
         }
 
-        // 4. 同步到 Sheet (前端欄位轉大階，新增 Condition)
+        // ============================================
+        // 同步至 Sheet
+        // ============================================
         function convertToSheetFormat(record) {
             const mapping = {
-                id: 'ID',
-                createdAt: 'CreatedAt',
-                content: 'Content',
-                category: 'Category',
-                price: 'Price',
-                likes: 'Likes',
-                status: 'Status',
-                condition: 'Condition'
+                id: 'ID', createdAt: 'CreatedAt', content: 'Content',
+                category: 'Category', price: 'Price', likes: 'Likes',
+                status: 'Status', condition: 'Condition'
             };
             const sheetRecord = {};
             for (let key in record) {
@@ -288,12 +376,15 @@
             }
         }
 
-        // 5. CRUD 操作 (async，避免 GET 覆蓋新資料)
+        // ============================================
+        // CRUD
+        // ============================================
         async function saveData(newRecord) {
             const records = await loadData();
             records.push(newRecord);
             localStorage.setItem("records", JSON.stringify(records));
             syncToSheet({ action: "create", record: newRecord });
+            showToast();   // 成功提示
             await renderList(records);
         }
 
@@ -316,7 +407,48 @@
             await renderList(records);
         }
 
-        // 6. UI 渲染 (支援 recordsOverride，加入全新度顯示與篩選)
+        // ============================================
+        // Toast 提示
+        // ============================================
+        function showToast() {
+            const toast = document.getElementById('successToast');
+            toast.classList.remove('toast-hidden');
+            setTimeout(() => {
+                toast.classList.add('toast-hidden');
+            }, 3000);
+        }
+
+        // ============================================
+        // 刪除確認
+        // ============================================
+        function confirmDelete(id, itemName) {
+            pendingDeleteId = id;
+            document.getElementById('confirmDeleteMsg').innerText = `確定要刪除「${itemName}」嗎？`;
+            document.getElementById('confirmDeleteModal').classList.remove('hidden');
+        }
+        function closeConfirmDelete() {
+            document.getElementById('confirmDeleteModal').classList.add('hidden');
+            pendingDeleteId = null;
+        }
+        document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+            if (pendingDeleteId) {
+                await deleteRecord(pendingDeleteId);
+                closeConfirmDelete();
+            }
+        });
+
+        // ============================================
+        // 更多篩選切換（手機）
+        // ============================================
+        function toggleMoreFilters() {
+            const extra = document.getElementById('extraFilters');
+            extra.classList.toggle('hidden');
+            extra.classList.toggle('lg:flex'); // 保持大螢幕顯示
+        }
+
+        // ============================================
+        // UI 渲染
+        // ============================================
         async function renderList(recordsOverride) {
             const records = recordsOverride || await loadData();
             const grid = document.getElementById('itemGrid');
@@ -357,7 +489,6 @@
                     }
                 }
 
-                // 全新度篩選
                 let matchesCondition = true;
                 if (conditionRange !== 'all') {
                     const cond = item.condition != null ? item.condition : 100;
@@ -368,13 +499,15 @@
                 return matchesSearch && matchesCategory && matchesStatus && matchesPrice && matchesCondition;
             });
 
-            // 排序：未賣出優先，再依價格
             filtered.sort((a, b) => {
                 const statusOrder = (i) => (i.status === 'done' ? 1 : 0);
                 if (statusOrder(a) !== statusOrder(b)) return statusOrder(a) - statusOrder(b);
                 if (currentSortBy === 'price-asc') return (a.price || 0) - (b.price || 0);
                 return (b.price || 0) - (a.price || 0);
             });
+
+            // 更新類別計數
+            updateCategoryCounts(records);
 
             grid.innerHTML = '';
             if (filtered.length === 0) {
@@ -385,7 +518,10 @@
                     const isSold = item.status === 'done';
                     const isLiked = item.likes > 0 && !isSold;
                     const displayPrice = item.price || 0;
-                    const displayCondition = item.condition != null ? item.condition : 100;
+                    const cond = item.condition != null ? item.condition : 100;
+                    const condColor = getConditionColor(cond);
+                    const condLabel = getConditionLabel(cond);
+                    const condTextColor = getConditionTextColor(cond);
                     
                     const card = document.createElement('div');
                     card.className = `rounded-2xl p-5 border shadow-sm hover:shadow-md transition-all group ${
@@ -402,7 +538,7 @@
                             <div class="flex flex-col items-end gap-2 text-right">
                                 <div class="flex items-center gap-2">
                                     ${!isSold ? `
-                                        <button onclick="handleLike('${item.id}')" class="p-1.5 rounded-full transition-all ${item.likes > 0 ? 'text-red-500 bg-red-50' : 'text-slate-300 hover:text-red-400 hover:bg-slate-50'}">
+                                        <button onclick="handleLike('${item.id}')" class="like-btn p-1.5 rounded-full transition-all ${item.likes > 0 ? 'text-red-500 bg-red-50' : 'text-slate-300 hover:text-red-400 hover:bg-slate-50'}">
                                             <i data-lucide="heart" class="w-4 h-4 ${item.likes > 0 ? 'fill-current' : ''}"></i>
                                         </button>
                                     ` : ''}
@@ -417,9 +553,15 @@
                         <div class="flex items-baseline gap-1 mb-1">
                             <span class="text-2xl font-black text-blue-600">$${displayPrice}</span>
                         </div>
-                        <div class="flex items-center gap-1 text-sm text-slate-500 mb-4">
-                            <i data-lucide="star" class="w-3 h-3"></i>
-                            <span>全新度：${displayCondition}%</span>
+                        <!-- 全新度進度條 + 標籤 -->
+                        <div class="mb-4">
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="font-bold ${condTextColor}">${condLabel}</span>
+                                <span class="text-slate-500">${cond}%</span>
+                            </div>
+                            <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full ${condColor} rounded-full" style="width: ${cond}%"></div>
+                            </div>
                         </div>
                         <div class="pt-4 border-t border-slate-50 flex items-center justify-between">
                             <div class="flex items-center gap-2 text-slate-400 text-xs">
@@ -430,7 +572,7 @@
                                 <button onclick="toggleStatus('${item.id}')" class="text-xs font-bold px-2 py-1 rounded transition-colors ${isSold ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
                                     ${isSold ? '恢復上架' : '尚未賣出'}
                                 </button>
-                                <button onclick="deleteRecord('${item.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
+                                <button onclick="confirmDelete('${item.id}', '${item.content.replace(/'/g, "\\'")}')" class="text-slate-300 hover:text-red-500 transition-colors">
                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                 </button>
                             </div>
@@ -442,7 +584,35 @@
             lucide.createIcons();
         }
 
-        // 7. 互動功能 (喜歡切換)
+        // ============================================
+        // 類別計數更新
+        // ============================================
+        function updateCategoryCounts(records) {
+            const mainSelect = document.getElementById('mainCategorySelect');
+            // 先儲存 value 對應的原始文字（不包含數字）
+            const options = mainSelect.querySelectorAll('option');
+            const countMap = {};
+            options.forEach(opt => {
+                if (opt.value !== '全部') {
+                    countMap[opt.value] = 0;
+                }
+            });
+            records.forEach(r => {
+                if (countMap.hasOwnProperty(r.category)) {
+                    countMap[r.category]++;
+                }
+            });
+            options.forEach(opt => {
+                if (opt.value !== '全部') {
+                    const count = countMap[opt.value] || 0;
+                    opt.textContent = `${opt.value} (${count})`;
+                }
+            });
+        }
+
+        // ============================================
+        // 互動功能
+        // ============================================
         async function handleLike(id) {
             const records = await loadData();
             const index = records.findIndex(r => r.id === id);
@@ -450,6 +620,13 @@
                 records[index].likes = records[index].likes ? 0 : 1;
                 localStorage.setItem("records", JSON.stringify(records));
                 syncToSheet({ action: "update", id: id, changes: { likes: records[index].likes } });
+                
+                // 心心動畫
+                const btn = document.querySelector(`button[onclick="handleLike('${id}')"]`);
+                if (btn) {
+                    btn.classList.add('heart-beat');
+                    setTimeout(() => btn.classList.remove('heart-beat'), 400);
+                }
                 await renderList(records);
             }
         }
@@ -482,14 +659,19 @@
             await renderList();
         }
 
-        // 8. 類別選單初始化
+        // ============================================
+        // 類別下拉初始化
+        // ============================================
         function initCategorySelects() {
             const mainSelect = document.getElementById('mainCategorySelect');
             const modalMainSelect = document.getElementById('modalMainCategory');
+            // 清空現有選項，避免重複
+            mainSelect.innerHTML = '<option value="全部">所有大類別</option>';
+            modalMainSelect.innerHTML = '';
             Object.keys(CATEGORY_TREE).forEach(main => {
                 const opt = document.createElement('option');
                 opt.value = main;
-                opt.innerText = main;
+                opt.innerText = main;  // 會在被 updateCategoryCounts 更新
                 mainSelect.appendChild(opt);
                 
                 const optModal = document.createElement('option');
@@ -529,7 +711,9 @@
             });
         }
 
-        // 9. Modal 操作
+        // ============================================
+        // Modal 操作
+        // ============================================
         function openModal() {
             document.getElementById('addItemModal').classList.remove('hidden');
         }
@@ -561,7 +745,9 @@
             document.getElementById('itemCondition').value = 100;
         }
 
-        // 10. AI 摘要功能
+        // ============================================
+        // AI 摘要
+        // ============================================
         async function askAI(userPrompt) {
             const res = await fetch(APPS_SCRIPT_URL, {
                 method: "POST",
@@ -579,13 +765,8 @@
             text.textContent = '思考中...';
             try {
                 const records = await loadData();
-                if (records.length === 0) {
-                    alert('未有轉賣資料可以摘要');
-                    return;
-                }
-                const summaryInput = records.slice(0, 30).map(r =>
-                    `[${r.category}] ${r.content} (全新度 ${r.condition != null ? r.condition : 100}%)`
-                ).join('\n');
+                if (records.length === 0) { alert('未有轉賣資料可以摘要'); return; }
+                const summaryInput = records.slice(0, 30).map(r => `[${r.category}] ${r.content} (全新度 ${r.condition != null ? r.condition : 100}%)`).join('\n');
                 const prompt = '以下是班級轉賣牆嘅留言。請用繁體中文，用 3-5 句概括同學最關心嘅問題、情緒同有冇明顯 patterns:\n\n' + summaryInput;
                 const result = await askAI(prompt);
                 alert(result);
@@ -597,12 +778,28 @@
             }
         }
 
-        // 11. 初始化
+        // ============================================
+        // 首次使用提示
+        // ============================================
+        function showOnboardingIfNeeded() {
+            if (!localStorage.getItem('onboarding_done')) {
+                document.getElementById('onboardingModal').classList.remove('hidden');
+            }
+        }
+        function closeOnboarding() {
+            document.getElementById('onboardingModal').classList.add('hidden');
+            localStorage.setItem('onboarding_done', '1');
+        }
+
+        // ============================================
+        // 初始化
+        // ============================================
         window.onload = async () => {
             document.getElementById('year').innerText = new Date().getFullYear();
             initCategorySelects();
             await renderList();
             lucide.createIcons();
+            showOnboardingIfNeeded();
         };
     </script>
 </body>
